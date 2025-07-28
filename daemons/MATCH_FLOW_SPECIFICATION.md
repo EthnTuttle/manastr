@@ -7,6 +7,51 @@ The Manastr game uses a **completely decentralized** approach where:
 - **Game Engine Bot** only validates outcomes and issues Loot rewards
 - **All game state** is transmitted through signed Nostr events
 - **Commitment/Reveal scheme** ensures fair play without centralized coordination
+- **Cashu token C values** provide tamper-proof randomness for army generation
+
+## Army Generation from Cashu Tokens 🏛️
+
+### Revolutionary Anti-Cheat Design
+The game achieves **perfect fairness** by using Cashu token unblinded signature C values as the source of army randomness:
+
+1. **Token Structure**: Each Cashu token contains an (x,C) pair where:
+   - `x` = token secret/blind factor
+   - `C` = unblinded signature value from the mint
+
+2. **C Value as Army Data**: Each 256-bit `C` value is chunked into 4 u64 values to generate a 4-unit army:
+   ```rust
+   // C value is 256 bits (32 bytes) - chunk into 4 u64 values for 4 units
+   let c_bytes = c_value_as_32_bytes(); // Extract 32 bytes from unblinded signature
+   let unit_seeds = [
+       u64::from_le_bytes([c_bytes[0..8]]),   // Unit 1 seed
+       u64::from_le_bytes([c_bytes[8..16]]),  // Unit 2 seed  
+       u64::from_le_bytes([c_bytes[16..24]]), // Unit 3 seed
+       u64::from_le_bytes([c_bytes[24..32]]), // Unit 4 seed
+   ];
+   
+   // Generate 4 units from the 4 seeds
+   let army = unit_seeds.map(|seed| generate_unit_from_seed(seed, league_id));
+   ```
+
+3. **Mint Authority**: Only the Cashu mint can generate valid C values through cryptographic signatures
+   - Players cannot forge C values without invalidating tokens
+   - Mint provides unbiased randomness that players cannot predict
+   - Economic cost (mana tokens) required to generate armies
+
+4. **Perfect Anti-Cheat Properties**:
+   - **Tamper-Proof**: C values are cryptographically signed, impossible to fake
+   - **No Player Advantage**: Randomness comes from mint, not player choice
+   - **Deterministic**: Same C value always generates identical unit
+   - **Verifiable**: Army generation can be independently verified from revealed tokens
+
+### Army Commitment Process
+1. **Before Match**: Players commit to `hash(cashu_token_secrets + nonce)`
+2. **Army Derivation**: Army is deterministically generated from C values of committed tokens
+3. **Army Commitment**: Players commit to `hash(army_c_values + army_nonce)`
+4. **Match Execution**: Players reveal tokens and army nonces for verification
+5. **Validation**: Game engine verifies army matches C values from revealed tokens
+
+This design ensures **perfect fairness** - no player can manipulate army composition since it's derived from mint-generated cryptographic signatures.
 
 ## Future Enhancement Opportunities
 
@@ -59,7 +104,7 @@ This is **not critical** for MVP since focus is client-driven resolution with au
        wager_amount: 100,
        league_id: 0,
        cashu_token_commitment: hash(cashu_token_secrets), // Commitment to tokens
-       army_commitment: hash(army_data + nonce),          // Commitment to army
+       army_commitment: hash(army_c_values + nonce),     // Commitment to army derived from C values
        created_at: timestamp
      }),
      pubkey: player1_npub,

@@ -18,6 +18,7 @@ echo -e "${BLUE}Testing revolutionary zero-coordination gaming architecture${NC}
 echo ""
 
 # Configuration
+CASHU_MINT_PORT=3333
 GAME_ENGINE_PORT=4444
 NOSTR_RELAY_PORT=7777
 TEST_TIMEOUT=300 # 5 minutes
@@ -50,6 +51,13 @@ check_service() {
 start_services() {
     echo -e "${PURPLE}🏗️ Starting required services...${NC}"
     
+    # Start Cashu Mint
+    echo -e "${YELLOW}Starting Cashu Mint...${NC}"
+    cd cashu-mint
+    cargo run --release > ../cashu-mint.log 2>&1 &
+    CASHU_MINT_PID=$!
+    cd ..
+    
     # Start Game Engine Bot
     echo -e "${YELLOW}Starting Game Engine Bot...${NC}"
     cd game-engine-bot
@@ -65,6 +73,7 @@ start_services() {
     cd ..
     
     # Wait for services to be ready
+    check_service "Cashu Mint" $CASHU_MINT_PORT
     check_service "Game Engine Bot" $GAME_ENGINE_PORT
     check_service "Nostr Relay" $NOSTR_RELAY_PORT
     
@@ -74,6 +83,11 @@ start_services() {
 # Function to stop services
 stop_services() {
     echo -e "${YELLOW}🛑 Stopping services...${NC}"
+    
+    if [ ! -z "${CASHU_MINT_PID:-}" ]; then
+        kill $CASHU_MINT_PID 2>/dev/null || true
+        echo -e "   Stopped Cashu Mint"
+    fi
     
     if [ ! -z "${GAME_ENGINE_PID:-}" ]; then
         kill $GAME_ENGINE_PID 2>/dev/null || true
@@ -86,8 +100,9 @@ stop_services() {
     fi
     
     # Kill any remaining processes
+    pkill -f "cashu-mint" 2>/dev/null || true
     pkill -f "game-engine-bot" 2>/dev/null || true
-    pkill -f "strfry" 2>/dev/null || true
+    pkill -f "nostr-rs-relay" 2>/dev/null || true
     
     echo -e "${GREEN}✅ Services stopped${NC}"
 }

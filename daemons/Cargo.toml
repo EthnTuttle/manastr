@@ -11,6 +11,10 @@ path = "player-driven-integration-test.rs"
 name = "integration-test"
 path = "integration-test.rs"
 
+[[bin]]
+name = "gaming-wallet-test"
+path = "gaming_wallet.rs"
+
 [dependencies]
 # Core async runtime
 tokio = { version = "1.0", features = ["full"] }
@@ -23,7 +27,7 @@ reqwest = { version = "0.11", features = ["json"] }
 anyhow = "1.0"
 thiserror = "1.0"
 
-# Logging
+# Logging  
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
@@ -50,3 +54,9 @@ sha2 = "0.10"
 # Cashu integration for token simulation
 cdk = "0.11"
 cdk-fake-wallet = "0.11"
+
+# URL parsing for CDK wallet
+url = "2.5"
+
+# Hex encoding for gaming wallet
+hex = "0.4"

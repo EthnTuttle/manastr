@@ -3,6 +3,70 @@ use crate::abilities;
 use crate::league;
 use sha2::{Digest, Sha256};
 
+/// Generate a complete army from a Cashu token C value (deterministic)
+/// Uses 256-bit unblinded signature C value from Cashu mint for tamper-proof randomness
+/// Each mana token = one army (4 units) = one match capability
+/// This logic is identical on both client and server for perfect synchronization
+pub fn generate_army_from_cashu_c_value(c_value_bytes: &[u8; 32], league_id: u8) -> [Unit; 4] {
+    // Chunk the 256-bit C value into 4 u64 seeds for 4 units
+    let unit_seeds = [
+        u64::from_le_bytes([
+            c_value_bytes[0], c_value_bytes[1], c_value_bytes[2], c_value_bytes[3],
+            c_value_bytes[4], c_value_bytes[5], c_value_bytes[6], c_value_bytes[7]
+        ]),
+        u64::from_le_bytes([
+            c_value_bytes[8], c_value_bytes[9], c_value_bytes[10], c_value_bytes[11],
+            c_value_bytes[12], c_value_bytes[13], c_value_bytes[14], c_value_bytes[15]
+        ]),
+        u64::from_le_bytes([
+            c_value_bytes[16], c_value_bytes[17], c_value_bytes[18], c_value_bytes[19],
+            c_value_bytes[20], c_value_bytes[21], c_value_bytes[22], c_value_bytes[23]
+        ]),
+        u64::from_le_bytes([
+            c_value_bytes[24], c_value_bytes[25], c_value_bytes[26], c_value_bytes[27],
+            c_value_bytes[28], c_value_bytes[29], c_value_bytes[30], c_value_bytes[31]
+        ]),
+    ];
+    
+    // Generate 4 units from the 4 u64 seeds
+    [
+        generate_unit_from_seed(unit_seeds[0], league_id),
+        generate_unit_from_seed(unit_seeds[1], league_id),
+        generate_unit_from_seed(unit_seeds[2], league_id),
+        generate_unit_from_seed(unit_seeds[3], league_id),
+    ]
+}
+
+/// Generate a single battle unit from a seed derived from C value
+/// Each unit uses different portions of the C value for variety within army
+fn generate_unit_from_seed(seed: u64, league_id: u8) -> Unit {
+    // Extract unit attributes from seed bits
+    let unit_type = (seed % 8) as u8;                      // 8 different unit types (0-7)
+    let base_attack = ((seed >> 8) % 20 + 10) as u8;       // 10-29 base attack
+    let base_defense = ((seed >> 16) % 15 + 5) as u8;      // 5-19 base defense
+    let base_health = ((seed >> 24) % 30 + 20) as u8;      // 20-49 base health
+    let ability_selector = ((seed >> 32) % 16) as u8;      // 16 possible abilities
+    
+    // Create base unit from seed
+    let mut unit = Unit {
+        attack: base_attack,
+        defense: base_defense,
+        health: base_health,
+        max_health: base_health,
+        ability: ability_from_c_value(ability_selector, unit_type),
+    };
+    
+    // Apply league scaling (maintains existing league mechanics)
+    league::apply_modifiers(&mut unit, league_id);
+    
+    unit
+}
+
+/// Economics: 1 mana token = 1 army (4 units) = 1 match capability
+/// For 100 mana wager: player can play 100 matches with 100 different armies
+/// Each army is deterministically generated from its corresponding token's 256-bit C value
+
+/// DEPRECATED: Legacy function using token secrets (replaced by C values)
 /// Generate battle units from mana token secret (deterministic)
 /// This logic is identical on both client and server for perfect synchronization
 pub fn generate_units_from_token_secret(token_secret: &str, league_id: u8) -> [Unit; 8] {
@@ -109,6 +173,22 @@ fn determine_round_winner(
 }
 
 /// Convert a byte to an ability (deterministic)
+/// Generate ability from C value-derived selector and unit type
+/// Provides more sophisticated ability selection based on Cashu randomness
+fn ability_from_c_value(ability_selector: u8, unit_type: u8) -> Ability {
+    // Enhanced ability selection considering both randomness and unit type
+    match (ability_selector % 8, unit_type % 4) {
+        (0..=1, _) => Ability::None,      // Common: no special ability
+        (2..=3, 0..=1) => Ability::Boost, // Warriors/Rangers get Boost
+        (2..=3, 2..=3) => Ability::Shield, // Defenders get Shield
+        (4..=5, _) => Ability::Heal,      // Any unit can have Heal
+        (6, _) => Ability::Boost,         // Rare: powerful Boost
+        (7, _) => Ability::Shield,        // Rare: powerful Shield
+        _ => Ability::None,
+    }
+}
+
+/// Legacy ability function for compatibility
 fn ability_from_byte(byte: u8) -> Ability {
     match byte % 4 {
         1 => Ability::Boost,
