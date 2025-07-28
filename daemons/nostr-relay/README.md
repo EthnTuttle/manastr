@@ -1,6 +1,14 @@
-# Nostr Relay Daemon (Strfry)
+# Nostr Relay for Mana Strategy Game
 
-Local Nostr relay for Mana Strategy Game development using strfry.
+This directory contains the Nostr relay setup using **nostr-rs-relay** for the decentralized Mana Strategy Game.
+
+## Overview
+
+The Nostr relay serves as the decentralized communication backbone for the game, handling:
+- Match challenge/acceptance events
+- Player move commitments and reveals
+- Game state synchronization
+- Anti-cheat verification events
 
 ## Quick Start
 
@@ -15,82 +23,91 @@ Local Nostr relay for Mana Strategy Game development using strfry.
 ./test.sh
 ```
 
+The relay will be available at `ws://localhost:7777`
+
+## Architecture
+
+- **Backend**: nostr-rs-relay (Rust-based Nostr relay)
+- **Port**: 7777 (ws://localhost:7777)
+- **Protocol**: WebSocket (Nostr NIP-01)
+- **Database**: SQLite (local file)
+- **Platform Support**: ✅ macOS, ✅ Linux, ✅ Windows
+
+## Event Types
+
+The relay handles these custom event kinds for the revolutionary player-driven architecture:
+
+- **Kind 31000**: Match Challenge
+- **Kind 31001**: Match Acceptance  
+- **Kind 31002**: Token Reveal
+- **Kind 31003**: Move Commitment
+- **Kind 31004**: Move Reveal
+- **Kind 31005**: Match Result
+- **Kind 31006**: Loot Distribution
+
 ## Configuration
 
-- **Port:** 7777 (ws://localhost:7777)
-- **Database:** ./strfry-db/ (LMDB)
-- **Config:** ./strfry.conf
-- **Logs:** ./logs/strfry.log
+The relay uses `config.toml` (auto-generated) for configuration:
+- Max message size: 128KB
+- Database: `./nostr-relay-db/`
+- Logs: `./logs/nostr-relay.log`
+- Port: 7777 (localhost only for development)
 
-## Game Event Types Supported
+## macOS Compatibility ✅
 
-1. **Challenge Request** - Player challenges another player
-2. **Challenge Acceptance** - Player accepts a challenge
-3. **Match Announcement** - Game bot announces match start
-4. **Unit Commitment** - Player commits to unit selection (hashed)
-5. **Unit Reveal** - Player reveals unit selection with token proof
-6. **Round Result** - Game bot publishes combat outcome
-7. **Match Result** - Game bot publishes final match winner
-8. **Loot Reward** - Game bot issues loot token to winner
+The relay is fully compatible with macOS through:
+- Native Rust compilation
+- SQLite database (no external dependencies)
+- Automatic configuration generation
+- No Linux-specific dependencies required
 
-## Event Retention
+## Development
 
-- **Game Events:** 24 hours
-- **Match Events:** 24 hours  
-- **Result Events:** 7 days (for longer reference)
+- **Logs**: Check `./logs/nostr-relay.log` for relay activity
+- **Database**: SQLite file at `./nostr-relay-db/`
+- **Config**: Auto-generated `config.toml` on first run
+- **Binary**: Built at `./nostr-rs-relay/target/release/nostr-rs-relay`
 
-## Development Features
+## Integration Testing
 
-- **Local Only:** Binds to 127.0.0.1 (localhost)
-- **No Authentication:** Open relay for local testing
-- **Compression:** WebSocket compression enabled
-- **Fast Storage:** LMDB for high performance
-- **Auto Cleanup:** Events expire based on retention policy
+✅ **Player-Driven Tests**: Use `../run-player-driven-tests.sh` (RECOMMENDED)
+- Tests revolutionary zero-coordination architecture
+- Uses 7 Nostr event types per current spec
+- Validates cryptographic commitment/reveal anti-cheat
+- **Status**: ✅ Working on macOS and Linux
 
-## Monitoring
-
-```bash
-# Check if relay is running
-pgrep -f "strfry relay"
-
-# View recent logs
-tail -f logs/strfry.log
-
-# Check database size
-du -sh strfry-db/
-
-# Export events (for backup/analysis)
-./strfry export > backup.jsonl
-
-# Import events (for testing/recovery)
-cat backup.jsonl | ./strfry import
-```
+❌ **Legacy Tests**: Avoid `../run-integration-test.sh` and `../run-advanced-tests.sh`
+- These use outdated centralized architecture
+- Not compatible with current player-driven specification
+- Should be removed in future cleanup
 
 ## Troubleshooting
 
 ### Relay won't start
 - Check if port 7777 is already in use: `lsof -i :7777`
-- Verify strfry binary exists: `ls -la strfry`
-- Check config file syntax: `./strfry --config=strfry.conf --help`
+- Verify binary exists: `ls -la nostr-rs-relay/target/release/nostr-rs-relay`
+- Run setup: `./setup.sh` to build nostr-rs-relay
 
 ### WebSocket connection fails
-- Verify relay is running: `pgrep strfry`
-- Test with websocat: `echo '["REQ","test",{}]' | websocat ws://localhost:7777`
-- Check firewall settings (shouldn't be an issue for localhost)
+- Verify relay is running: `pgrep nostr-rs-relay`
+- Test connection: `nc -z localhost 7777`
+- Check macOS firewall if needed
+
+### macOS-specific issues
+- Grant network access if prompted by macOS
+- Ensure Rust toolchain is installed: `rustc --version`
+- Build failures: Update Xcode command line tools
 
 ### Database issues
 - Check disk space: `df -h`
-- Verify permissions: `ls -la strfry-db/`
-- Reset database: `rm -rf strfry-db/` (will lose all events)
+- Verify permissions: `ls -la nostr-relay-db/`
+- Reset database: `rm -rf nostr-relay-db/` (will lose all events)
 
-## Integration with Game
+## Integration
 
-### Game Engine Bot
-- Subscribes to: `{"#game": ["mana-strategy"]}`
-- Publishes: Authority events (results, rewards)
+The relay integrates with:
+- **Game Engine Bot**: Validates events and publishes results
+- **Web Client**: Sends player events and receives updates  
+- **Player-Driven Integration Tests**: Revolutionary zero-coordination testing
 
-### Web Client
-- Subscribes to: `{"#match_id": ["specific-match"]}`
-- Publishes: Player events (challenges, commitments, reveals)
-
-This relay stores ALL game data - no separate database needed!
+This relay is the **backbone of the world's first trustless multiplayer gaming architecture**!

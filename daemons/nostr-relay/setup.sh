@@ -1,9 +1,9 @@
 #!/bin/bash
-# Strfry Nostr Relay Setup for Mana Strategy Game
+# nostr-rs-relay Setup for Mana Strategy Game
 
 set -e
 
-echo "🔨 Setting up strfry Nostr relay for local development..."
+echo "🔨 Setting up nostr-rs-relay for local development..."
 
 # Check if we're in the right directory
 if [ ! -f "setup.sh" ]; then
@@ -11,39 +11,30 @@ if [ ! -f "setup.sh" ]; then
     exit 1
 fi
 
-# Install dependencies (Ubuntu/Debian)
-echo "📦 Installing build dependencies..."
-sudo apt update
-sudo apt install -y git build-essential pkg-config libtool autoconf autoconf-archive automake
-sudo apt install -y libyaml-cpp-dev libssl-dev zlib1g-dev liblmdb-dev
-
-# Clone strfry if not already present
-if [ ! -d "strfry" ]; then
-    echo "📥 Cloning strfry repository..."
-    git clone https://github.com/damus-io/strfry.git
+# Clone nostr-rs-relay if not already present
+if [ ! -d "nostr-rs-relay" ]; then
+    echo "📥 Cloning nostr-rs-relay repository..."
+    git clone https://github.com/scsibug/nostr-rs-relay nostr-rs-relay
 fi
 
-# Build strfry
-echo "🏗️  Building strfry..."
-cd strfry
-git submodule update --init
-make setup-golpe
-make -j$(nproc)
+# Build nostr-rs-relay
+echo "🏗️  Building nostr-rs-relay..."
+cd nostr-rs-relay
+cargo build --release
 cd ..
-
-# Copy binary to daemon directory
-cp strfry/strfry ./strfry
-chmod +x strfry
 
 # Create necessary directories
 mkdir -p logs
-mkdir -p strfry-db
+mkdir -p nostr-relay-db
 
-echo "✅ Strfry setup complete!"
-echo "📍 Binary: ./strfry"
-echo "📁 Database: ./strfry-db/"
-echo "📋 Config: ./strfry.conf"
+echo "✅ nostr-rs-relay setup complete!"
+echo "📍 Binary: ./nostr-rs-relay/target/release/nostr-rs-relay"
+echo "📁 Database: ./nostr-relay-db/"
+echo "📋 Config: ./config.toml (auto-generated)"
 echo "📝 Logs: ./logs/"
+echo ""
+echo "🖥️  macOS Compatible: ✅"
+echo "🐧 Linux Compatible: ✅"
 echo ""
 echo "To start the relay:"
 echo "  ./start.sh"

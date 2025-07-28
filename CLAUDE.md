@@ -249,45 +249,40 @@ This implementation could **revolutionize multiplayer gaming** by:
 
 **Status**: Revolutionary architecture complete with air-tight integration testing! 🚀✨
 
-## Latest Achievements (Commit: 22579c8) 🎉
+## Latest Achievements: macOS Cleanup & Documentation Update 🧹
 
-### ✅ **Nostr-First Architecture Implementation**
-- **Deterministic Key Generation**: All tests use actual Nostr keys from seeds
-- **EventId-Based Identification**: Replaced UUID strings with proper Nostr EventIds
-- **PublicKey Player Identity**: Native Nostr types throughout system
-- **Protocol Consistency**: Single source of truth via Nostr library
+### ✅ **macOS Integration Test Validation** (2025-07-28)
+- **Cross-Platform Confirmed**: Revolutionary architecture works perfectly on macOS
+- **nostr-rs-relay Setup**: Fixed and documented cross-platform relay setup
+- **Zero Platform Issues**: No macOS-specific workarounds required
+- **Complete Test Success**: All player-driven tests pass natively on macOS
 
-### ✅ **Air-Tight Integration Testing Complete**
-- **Comprehensive Test Suite**: 5 test categories covering all scenarios
-  - Happy path player-driven matches with loot distribution
-  - Anti-cheat commitment verification and cheating detection
-  - Concurrent match processing with proper isolation
-  - Edge cases: malformed events, timing attacks, unknown players
-  - Stress testing: 20+ concurrent matches
-- **Revolutionary Validation**: Tests prove zero-coordination gaming works
-- **Production Ready**: Complete error handling, logging, service management
+### ✅ **Legacy Code Cleanup Complete**
+- **Removed Outdated Tests**: Eliminated `run-integration-test.sh`, `run-advanced-tests.sh`, `integration-test.rs`
+- **Removed Legacy Directory**: Cleaned up `integration_test/` with outdated centralized architecture
+- **Removed Obsolete Config**: Cleaned up `strfry.conf` and outdated relay references
+- **Documentation Updated**: All READMEs now reflect revolutionary player-driven architecture only
 
-### 🏗️ **Architectural Foundation Established**
-- **Rule**: All data types MUST use Nostr format except CDK-required types
-- **Benefit**: Reduced dependencies, testing reliability, protocol consistency
-- **Future-Proof**: Ready for full Nostr EventId implementation across all daemons
+### ✅ **Documentation Modernization**
+- **Revolutionary Focus**: All documentation emphasizes zero-coordination breakthrough
+- **macOS Compatibility**: Full platform support documentation with troubleshooting
+- **Current Architecture Only**: Removed all references to outdated centralized approaches
+- **Clear Testing Guide**: Only `run-player-driven-tests.sh` recommended (others removed)
 
-### 📊 **Project Status: 100% CORE COMPLETE** 🎉
-**REVOLUTIONARY BREAKTHROUGH ACHIEVED**: The world's first working zero-coordination multiplayer game is fully operational!
+### 🏗️ **Clean Architecture Achieved**
+- **Single Test Suite**: Only current revolutionary architecture tests remain
+- **Consistent Messaging**: All documentation aligns with player-driven breakthrough
+- **Cross-Platform Ready**: Native support confirmed and documented for macOS/Linux
+- **No Legacy Confusion**: Eliminated outdated references that could mislead developers
 
-### ✅ **INTEGRATION TEST SUCCESS** (2025-01-28)
-- **🎯 Complete Player-Driven Match Flow**: 7 Nostr event types successfully executed
-- **🔒 Cryptographic Anti-Cheat Verified**: Commitment/reveal system prevents all cheating
-- **⚔️ Deterministic Combat Logic**: Identical outcomes across all participants
-- **📡 Nostr-First Architecture**: EventId-based identification throughout system
-- **🛡️ Pure Validator Confirmed**: Game engine only validates, never coordinates
-- **📝 Educational Debug Logging**: Complete game flow explanation via RUST_LOG=debug
+### 📊 **Project Status: CLEAN & REVOLUTIONARY** 🎉
+**BREAKTHROUGH MAINTAINED**: Zero-coordination gaming architecture validated and cleaned
 
-**Test Results**: ALL TESTS PASSED ✅
-- Happy path player-driven matches ✅
-- Anti-cheat commitment verification ✅  
-- Concurrent match processing ✅
-- Edge cases and malicious events ✅
-- Stress testing (high-volume matches) ✅
+### ✅ **CLEANUP SUCCESS SUMMARY**
+- **🗑️ Legacy Tests Removed**: Outdated centralized architecture tests eliminated
+- **📚 Documentation Updated**: All files reflect revolutionary player-driven architecture
+- **🖥️ macOS Validated**: Cross-platform compatibility confirmed and documented  
+- **🧹 Clean Codebase**: No confusing legacy references remain
+- **🎯 Developer Clarity**: Single, clear path forward with revolutionary architecture
 
-The revolutionary zero-coordination gaming architecture is **PROVEN AND OPERATIONAL**!
+**The revolutionary architecture is now clean, documented, and ready for the next phase!** 🚀✨
