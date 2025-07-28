@@ -1,0 +1,39 @@
+[package]
+name = "cashu-mint"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# CDK v0.11.0 - The core Cashu Development Kit
+cdk = "0.11.0"
+
+# Web framework and async runtime
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Serialization and JSON handling
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Database (SQLite for simplicity in demo)
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-rustls", "uuid", "chrono"] }
+
+# Utilities
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Configuration and logging
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Cryptography (CDK handles most of this)
+secp256k1 = "0.28"
+async-trait = "0.1"
+
+[dev-dependencies]
+tempfile = "3.8"

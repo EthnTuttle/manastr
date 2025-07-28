@@ -13,6 +13,7 @@
 - ✅ **Cryptographic Anti-Cheat:** Commitment/reveal scheme prevents cheating without centralized authority
 - ✅ **Complete Decentralization:** No centralized matchmaking or coordination required
 - ✅ **Shared WASM Logic:** Client-server synchronization via identical Rust/WASM game logic
+- ✅ **Nostr-First Data Architecture:** All data types use Nostr format except CDK-required types
 
 ### Project Structure
 ```
@@ -148,6 +149,39 @@ POST /v1/mint/quote/bolt11  // Request mana minting
 POST /v1/mint/bolt11        // Mint mana tokens  
 POST /v1/melt/quote/bolt11  // Request loot melting (loot currency only)
 POST /v1/melt/bolt11        // Melt loot back to Lightning
+```
+
+## Core Architectural Principles 🏗️
+
+### Nostr-First Data Architecture
+**RULE**: All data types MUST use Nostr format except CDK-required types.
+
+**Implementation Requirements**:
+- ✅ **Player Identity**: Always use Nostr `PublicKey` and `SecretKey` types
+- ✅ **Event Data**: All game data transmitted via Nostr events (kinds 31000-31006)  
+- ✅ **Deterministic Keys**: Use predetermined key generation for testing (cheap to create)
+- ✅ **Consistent Format**: Narrow dependencies by standardizing on Nostr data types
+- ⚠️ **CDK Exception Only**: Use CDK types ONLY when required by Cashu protocol
+
+**Benefits**:
+- **Reduced Dependencies**: Single source of truth for key management
+- **Protocol Consistency**: All services speak same data language
+- **Testing Reliability**: Deterministic key generation for reproducible tests
+- **Decentralization**: Native Nostr types align with decentralized architecture
+
+**Examples**:
+```rust
+// ✅ CORRECT: Use Nostr types everywhere
+use nostr::{Keys, PublicKey, SecretKey, EventId};
+let player_keys = Keys::from_hex_str("deterministic_test_key")?;
+let player_npub = player_keys.public_key().to_string();
+
+// ❌ WRONG: Custom string/UUID types
+let player_id = "custom_player_123";
+let match_id = Uuid::new_v4().to_string();
+
+// ✅ CORRECT: Use EventId for match identification
+let match_event_id = EventId::from_hex("match_event_hex")?;
 ```
 
 ## Next Steps for Complete System 🚀

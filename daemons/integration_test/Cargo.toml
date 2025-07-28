@@ -1,0 +1,32 @@
+[package]
+name = "manastr-integration-test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.0", features = ["full", "signal"] }
+
+# HTTP client for API testing
+reqwest = { version = "0.11", features = ["json"] }
+
+# JSON handling
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+anyhow = "1.0"
+
+# Utilities
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Nostr for key derivation
+nostr-sdk = "0.35"
+nostr = "0.35"
+
+# Cashu CDK for realistic token operations
+cdk-fake-wallet = "0.11"

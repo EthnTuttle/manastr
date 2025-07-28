@@ -1,0 +1,25 @@
+[server]
+host = "127.0.0.1"
+port = 3333
+cors_origins = ["*"]
+
+[database]
+url = "sqlite:mint.db"
+max_connections = 10
+
+[lightning]
+backend = "stub"
+
+[currencies.mana]
+unit = "mana"
+precision = 0
+min_amount = 1
+max_amount = 1000000
+fee_reserve = 1.0
+
+[currencies.loot]
+unit = "loot"
+precision = 0
+min_amount = 1
+max_amount = 1000000
+fee_reserve = 2.0
