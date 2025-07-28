@@ -1,7 +1,7 @@
 use anyhow::Result;
 use reqwest::Client;
 use serde_json::{json, Value};
-use std::collections::HashMap;
+
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{info, warn, error};
@@ -25,7 +25,7 @@ pub struct IntegrationTestSuite {
     relay_url: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct TestPlayer {
     pub name: String,
     pub private_key: String,
@@ -97,10 +97,10 @@ impl IntegrationTestSuite {
     /// Create test players with deterministic keys
     pub fn create_test_players(&self) -> (TestPlayer, TestPlayer) {
         // Derive actual Nostr keys from deterministic private keys
-        let player1_keys = Keys::from_hex_str("0000000000000000000000000000000000000000000000000000000000000003")
+        let player1_keys = Keys::parse("0000000000000000000000000000000000000000000000000000000000000003")
             .expect("Failed to create player1 keys");
         
-        let player2_keys = Keys::from_hex_str("0000000000000000000000000000000000000000000000000000000000000004")
+        let player2_keys = Keys::parse("0000000000000000000000000000000000000000000000000000000000000004")
             .expect("Failed to create player2 keys");
 
         let player1 = TestPlayer {

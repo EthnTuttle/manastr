@@ -193,7 +193,7 @@ impl NostrClient {
             .await
             .map_err(|e| GameEngineError::NostrError(format!("Failed to send loot event: {}", e)))?;
 
-        info!("🏆 Published loot distribution for match {}", loot_distribution.match_id);
+        info!("🏆 Published loot distribution for match {}", loot_distribution.match_event_id);
 
         Ok(())
     }

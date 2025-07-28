@@ -1,4 +1,4 @@
-use nostr::{Event, EventBuilder, Keys, Kind, Tag};
+use nostr::{Event, EventBuilder, Keys, Kind, Tag, EventId, PublicKey};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -20,20 +20,21 @@ pub const KIND_LOOT_DISTRIBUTION: Kind = Kind::Custom(31006);
 /// Match challenge created by Player 1
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchChallenge {
-    pub challenger_npub: String,
+    pub challenger_npub: String,         // Serialized as string for JSON, but should be PublicKey
     pub wager_amount: u64,
     pub league_id: u8,
     pub cashu_token_commitment: String,  // hash(cashu_token_secrets)
     pub army_commitment: String,         // hash(army_data + nonce)
     pub expires_at: u64,                 // Unix timestamp
     pub created_at: u64,
+    pub match_event_id: String,          // EventId as hex string for JSON serialization
 }
 
 /// Match acceptance by Player 2
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchAcceptance {
     pub acceptor_npub: String,
-    pub match_id: String,
+    pub match_event_id: String,          // References the challenge EventId
     pub cashu_token_commitment: String,  // Player 2's token commitment
     pub army_commitment: String,         // Player 2's army commitment
     pub accepted_at: u64,
@@ -43,7 +44,7 @@ pub struct MatchAcceptance {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenReveal {
     pub player_npub: String,
-    pub match_id: String,
+    pub match_event_id: String,          // References the challenge EventId
     pub cashu_tokens: Vec<String>,       // Actual Cashu token secrets
     pub token_secrets_nonce: String,     // Nonce used in commitment
     pub revealed_at: u64,
@@ -53,7 +54,7 @@ pub struct TokenReveal {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MoveCommitment {
     pub player_npub: String,
-    pub match_id: String,
+    pub match_event_id: String,          // References the challenge EventId
     pub round_number: u32,
     pub move_commitment: String,         // hash(unit_positions + unit_abilities + nonce)
     pub committed_at: u64,
@@ -63,7 +64,7 @@ pub struct MoveCommitment {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MoveReveal {
     pub player_npub: String,
-    pub match_id: String,
+    pub match_event_id: String,          // References the challenge EventId
     pub round_number: u32,
     pub unit_positions: Vec<u8>,         // Positions of units for this round
     pub unit_abilities: Vec<String>,     // Abilities used this round
@@ -75,7 +76,7 @@ pub struct MoveReveal {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchResult {
     pub player_npub: String,
-    pub match_id: String,
+    pub match_event_id: String,          // References the challenge EventId
     pub final_army_state: Value,         // Final state of all units
     pub all_round_results: Vec<Value>,   // Results from all combat rounds
     pub calculated_winner: Option<String>, // Winner npub or None for draw
@@ -86,7 +87,7 @@ pub struct MatchResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LootDistribution {
     pub game_engine_npub: String,
-    pub match_id: String,
+    pub match_event_id: String,          // References the challenge EventId
     pub winner_npub: Option<String>,     // None for draw
     pub loot_cashu_token: Option<String>, // Loot token for winner (None for draw)
     pub match_fee: u64,                  // Fee taken (5% of wager)
@@ -107,7 +108,7 @@ pub struct ValidationSummary {
 /// Player-driven match state machine
 #[derive(Debug, Clone)]
 pub struct PlayerMatch {
-    pub match_id: String,
+    pub match_event_id: String,          // EventId as hex string for internal tracking
     pub phase: MatchPhase,
     pub player1_npub: String,
     pub player2_npub: String,
@@ -153,9 +154,9 @@ pub struct PlayerReveals {
 }
 
 impl PlayerMatch {
-    pub fn new(challenge: &MatchChallenge, match_id: String) -> Self {
+    pub fn new(challenge: &MatchChallenge, match_event_id: String) -> Self {
         Self {
-            match_id,
+            match_event_id,
             phase: MatchPhase::Created,
             player1_npub: challenge.challenger_npub.clone(),
             player2_npub: String::new(), // Set when accepted
@@ -184,7 +185,7 @@ impl PlayerMatch {
         self.player2_commitments.army = Some(acceptance.army_commitment.clone());
         self.phase = MatchPhase::Accepted;
 
-        info!("Match {} accepted by {}", self.match_id, self.player2_npub);
+        info!("Match {} accepted by {}", self.match_event_id, self.player2_npub);
         Ok(())
     }
 
@@ -207,7 +208,7 @@ impl PlayerMatch {
         if self.player1_reveals.cashu_tokens.is_some() && 
            self.player2_reveals.cashu_tokens.is_some() {
             self.phase = MatchPhase::TokensRevealed;
-            info!("Match {} - both players revealed tokens", self.match_id);
+            info!("Match {} - both players revealed tokens", self.match_event_id);
         }
 
         Ok(())
@@ -268,17 +269,17 @@ impl PlayerMatch {
     pub fn set_final_result(&mut self, winner: Option<String>) {
         self.final_winner = winner;
         self.phase = MatchPhase::Completed;
-        info!("Match {} completed - winner: {:?}", self.match_id, self.final_winner);
+        info!("Match {} completed - winner: {:?}", self.match_event_id, self.final_winner);
     }
 
     pub fn mark_loot_distributed(&mut self) {
         self.phase = MatchPhase::LootDistributed;
-        info!("Match {} - loot distributed, match archived", self.match_id);
+        info!("Match {} - loot distributed, match archived", self.match_event_id);
     }
 
     pub fn mark_invalid(&mut self, reason: String) {
         self.phase = MatchPhase::Invalid(reason.clone());
-        error!("Match {} marked invalid: {}", self.match_id, reason);
+        error!("Match {} marked invalid: {}", self.match_event_id, reason);
     }
 }
 
@@ -377,7 +378,7 @@ impl LootDistribution {
             Tag::event(nostr::EventId::from_hex(match_event_id)?),
             Tag::custom(nostr::TagKind::Custom("winner".into()), vec![winner_tag]),
             Tag::custom(nostr::TagKind::Custom("loot_amount".into()), vec!["95".to_string()]), // TODO: Calculate actual loot
-            Tag::custom(nostr::TagKind::Custom("match_id".into()), vec![self.match_id.clone()]),
+            Tag::custom(nostr::TagKind::Custom("match_event_id".into()), vec![self.match_event_id.clone()]),
         ];
 
         let event = EventBuilder::new(KIND_LOOT_DISTRIBUTION, content, tags).to_event(keys)?;
@@ -400,6 +401,7 @@ mod tests {
             army_commitment: "army_hash_456".to_string(),
             expires_at: 1690000000,
             created_at: 1689900000,
+            match_event_id: "match_event_123".to_string(),
         };
 
         let match_id = "match_123".to_string();
@@ -410,7 +412,7 @@ mod tests {
 
         let acceptance = MatchAcceptance {
             acceptor_npub: "npub1bob".to_string(),
-            match_id: match_id.clone(),
+            match_event_id: match_id.clone(),
             cashu_token_commitment: "bob_token_commitment".to_string(),
             army_commitment: "bob_army_commitment".to_string(),
             accepted_at: 1689910000,
@@ -431,13 +433,14 @@ mod tests {
             army_commitment: "alice_army".to_string(),
             expires_at: 1690000000,
             created_at: 1689900000,
+            match_event_id: "match_event_123".to_string(),
         };
 
         let mut player_match = PlayerMatch::new(&challenge, "match_123".to_string());
         
         let acceptance = MatchAcceptance {
             acceptor_npub: "npub1bob".to_string(),
-            match_id: "match_123".to_string(),
+            match_event_id: "match_123".to_string(),
             cashu_token_commitment: "bob_commitment".to_string(),
             army_commitment: "bob_army".to_string(),
             accepted_at: 1689910000,
@@ -447,7 +450,7 @@ mod tests {
         // Alice reveals tokens
         let alice_reveal = TokenReveal {
             player_npub: "npub1alice".to_string(),
-            match_id: "match_123".to_string(),
+            match_event_id: "match_123".to_string(),
             cashu_tokens: vec!["token1".to_string(), "token2".to_string()],
             token_secrets_nonce: "alice_nonce".to_string(),
             revealed_at: 1689920000,
@@ -460,7 +463,7 @@ mod tests {
         // Bob reveals tokens
         let bob_reveal = TokenReveal {
             player_npub: "npub1bob".to_string(),
-            match_id: "match_123".to_string(),
+            match_event_id: "match_123".to_string(),
             cashu_tokens: vec!["token3".to_string(), "token4".to_string()],
             token_secrets_nonce: "bob_nonce".to_string(),
             revealed_at: 1689930000,
@@ -482,6 +485,7 @@ mod tests {
             army_commitment: "alice_army".to_string(),
             expires_at: 1690000000,
             created_at: 1689900000,
+            match_event_id: "match_event_123".to_string(),
         };
 
         let mut player_match = PlayerMatch::new(&challenge, "match_123".to_string());
@@ -489,7 +493,7 @@ mod tests {
         // Add move commitments for round 1
         let alice_commitment = MoveCommitment {
             player_npub: "npub1alice".to_string(),
-            match_id: "match_123".to_string(),
+            match_event_id: "match_123".to_string(),
             round_number: 1,
             move_commitment: "alice_move_commitment_r1".to_string(),
             committed_at: 1689940000,
@@ -498,7 +502,7 @@ mod tests {
 
         let bob_commitment = MoveCommitment {
             player_npub: "npub1bob".to_string(),
-            match_id: "match_123".to_string(),
+            match_event_id: "match_123".to_string(),
             round_number: 1,
             move_commitment: "bob_move_commitment_r1".to_string(),
             committed_at: 1689940001,
@@ -511,7 +515,7 @@ mod tests {
         // Add move reveals for round 1
         let alice_reveal = MoveReveal {
             player_npub: "npub1alice".to_string(),
-            match_id: "match_123".to_string(),
+            match_event_id: "match_123".to_string(),
             round_number: 1,
             unit_positions: vec![1, 2, 3],
             unit_abilities: vec!["boost".to_string()],
@@ -522,7 +526,7 @@ mod tests {
 
         let bob_reveal = MoveReveal {
             player_npub: "npub1bob".to_string(),
-            match_id: "match_123".to_string(),
+            match_event_id: "match_123".to_string(),
             round_number: 1,
             unit_positions: vec![4, 5, 6],
             unit_abilities: vec!["shield".to_string()],

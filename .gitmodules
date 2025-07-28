@@ -1,0 +1,3 @@
+[submodule "daemons/nostr-relay/nostr-rs-relay"]
+	path = daemons/nostr-relay/nostr-rs-relay
+	url = https://github.com/scsibug/nostr-rs-relay.git

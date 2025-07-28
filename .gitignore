@@ -39,6 +39,10 @@ Thumbs.db
 daemons/*/logs/
 daemons/*/data/
 daemons/nostr-relay/strfry.db*
+daemons/nostr-relay/nostr-relay-db/
+daemons/nostr-relay/strfry/
+daemons/nostr-relay/config.toml
+daemons/nostr-relay/*/target/
 daemons/cashu-mint/*.db
 daemons/cashu-mint/mint-data/
 
