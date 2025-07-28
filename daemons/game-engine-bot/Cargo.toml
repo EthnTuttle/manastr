@@ -1,0 +1,38 @@
+[package]
+name = "game-engine-bot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Shared game logic (native Rust, not WASM)
+shared-game-logic = { path = "../shared-game-logic" }
+
+# Web framework
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Nostr client
+nostr-sdk = "0.35"
+nostr = "0.35"
+
+# HTTP client for Cashu integration
+reqwest = { version = "0.11", features = ["json"] }
+
+# Crypto and utilities
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Configuration and logging
+config = "0.14"
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+tempfile = "3.8.1"
