@@ -28,8 +28,32 @@ manastr/
 └── CLAUDE.md               # 📍 THIS FILE - Memory & status tracking
 ```
 
-### 📂 **Repository Organization Note**
-**IMPORTANT**: The gaming wallet is currently misplaced in the top-level `/daemons` directory. It should be properly nested as `/daemons/gaming-wallet/` to maintain consistent project structure and separation of concerns.
+### 📂 **Repository Organization & Just Commands**
+
+**✅ COMMAND AUTOMATION**: This project uses [`just`](https://just.systems/) for streamlined development workflows.
+
+**🚀 Quick Start Commands**:
+```bash
+just build          # Build all components  
+just demo           # Demonstrate revolutionary gaming wallet
+just test           # Run all unit tests
+just integration    # Run complete system integration test
+just dev            # Full development workflow (build + test + check)
+just --list         # Show all available commands
+```
+
+**🔧 Development Commands**:
+```bash
+just dev-start      # Start all services for development
+just dev-stop       # Stop all services  
+just check          # Format, lint, and test everything
+just clean          # Remove all build artifacts
+just status         # Show system component status
+```
+
+**📚 For Claude Code Users**: Run `just claude-help` for complete integration guide.
+
+**IMPORTANT**: The gaming wallet implementation is currently in `/daemons/gaming_wallet.rs`. Consider moving to `/daemons/gaming-wallet/` directory structure for better organization.
 
 ### 🏗️ **Gaming Wallet Implementation Strategy**
 **PRINCIPLE**: Maximize CDK API usage, minimize custom deviations.

@@ -19,6 +19,8 @@ use cdk::{
     Amount,
 };
 use cdk_fake_wallet::FakeWallet;
+use sha2::{Digest, Sha256};
+use nostr::Keys;
 
 /// 🏛️ CANONICAL GAMING TOKEN: Complete Cashu token with gaming metadata
 /// 
@@ -126,7 +128,10 @@ impl GamingWallet {
             let proof = Proof {
                 amount: Amount::from(1u64), // 1 mana token
                 secret: Secret::new(x_value.clone()),
-                c: PublicKey::from_hex(&c_value).unwrap(),
+                c: PublicKey::from_hex(&c_value).map_err(|e| {
+                    tracing::error!("Failed to create PublicKey from hex '{}': {}", c_value, e);
+                    e
+                }).unwrap(),
                 witness: None,
                 dleq: None,
                 keyset_id: Id::from_bytes(&[0u8; 8]).unwrap(),
@@ -161,20 +166,24 @@ impl GamingWallet {
     /// Generate deterministic C value for testing (simulates mint signature)
     /// In production: C values come from mint's cryptographic signatures
     fn generate_deterministic_c_value(&self, batch: u64, index: u64) -> String {
-        use sha2::{Sha256, Digest};
-        let seed = format!("mint_signature_c_value_{}_{}_{}", self.mint_url, batch, index);
-        let mut hasher = Sha256::new();
-        hasher.update(seed.as_bytes());
-        let hash = hasher.finalize();
+        // Create deterministic seed for key generation
+        let seed = format!("mint_c_value_{}_{}_{}", self.mint_url, batch, index);
         
-        // Generate a valid 33-byte compressed public key (02 prefix + 32 bytes)
-        let mut pubkey_bytes = vec![0x02u8]; // Compressed pubkey prefix
-        pubkey_bytes.extend_from_slice(&hash);
-        hex::encode(pubkey_bytes)
+        // Generate deterministic Nostr keys from seed (both are secp256k1)
+        // This simulates what a Cashu mint would provide as unblinded signature
+        let keys = Keys::parse(&format!("{:0>64}", hex::encode(
+            Sha256::digest(seed.as_bytes())
+        ))).unwrap_or_else(|_| Keys::generate());
+        
+        // Get the compressed public key in hex format (33 bytes: prefix + 32 bytes)
+        // This is the format that CDK expects for PublicKey
+        let pubkey_32_bytes = keys.public_key().to_hex();
+        // Add compressed public key prefix (02 or 03) - we'll use 02 for simplicity
+        format!("02{}", pubkey_32_bytes)
     }
     
     /// Convert hex string to 32-byte array for army generation
-    /// Uses the 32 bytes after the 02 prefix from the compressed public key
+    /// Extracts the 32 bytes from compressed public key (skipping 02/03 prefix)
     fn hex_to_32_bytes(&self, hex_string: &str) -> [u8; 32] {
         // Remove 0x prefix if present
         let clean_hex = hex_string.strip_prefix("0x").unwrap_or(hex_string);
@@ -188,13 +197,15 @@ impl GamingWallet {
             hasher.finalize().to_vec()
         });
         
-        // Extract 32 bytes for army generation (skip 02 prefix if it's a compressed pubkey)
-        let start_idx = if bytes.len() == 33 && bytes[0] == 0x02 { 1 } else { 0 };
+        // Extract 32 bytes for army generation (skip 02/03 prefix if it's a compressed pubkey)
+        let start_idx = if bytes.len() == 33 && (bytes[0] == 0x02 || bytes[0] == 0x03) { 1 } else { 0 };
         let mut result = [0u8; 32];
         
         // Copy available bytes, pad with zeros if needed
         let copy_len = std::cmp::min(32, bytes.len() - start_idx);
-        result[..copy_len].copy_from_slice(&bytes[start_idx..start_idx + copy_len]);
+        if copy_len > 0 {
+            result[..copy_len].copy_from_slice(&bytes[start_idx..start_idx + copy_len]);
+        }
         
         result
     }
@@ -252,9 +263,13 @@ async fn main() -> Result<()> {
     for (i, token) in tokens.iter().enumerate() {
         tracing::info!("Token {}: C value = {}, C bytes = {:?}", 
                       i + 1, &token.c_value[..16], &token.c_value_bytes[..4]);
+        
+        // Demonstrate army generation from Cashu C values
+        let army = token.generate_army(0); // League 0 for testing
+        tracing::info!("  Generated Army: {:?}", army.iter().map(|u| (u.attack, u.defense, u.health, u.ability)).collect::<Vec<_>>());
     }
     
-    tracing::info!("✅ Gaming wallet demonstration complete");
+    tracing::info!("✅ Gaming wallet demonstration complete - Army generation working!");
     Ok(())
 }
 
@@ -276,31 +291,32 @@ mod tests {
         
         assert_eq!(tokens.len(), 5);
         
-        // Verify each token has unique C values and army seeds
+        // Verify each token has unique C values
         let mut c_values = std::collections::HashSet::new();
-        let mut army_seeds = std::collections::HashSet::new();
         
         for token in &tokens {
             assert!(!token.c_value.is_empty());
             assert!(!token.x_value.is_empty());
-            assert!(token.army_seed > 0);
             
             // Ensure uniqueness
             assert!(c_values.insert(token.c_value.clone()));
-            assert!(army_seeds.insert(token.army_seed));
         }
     }
     
     #[tokio::test]
-    async fn test_army_seed_deterministic() {
+    async fn test_army_generation_deterministic() {
         let mut wallet = GamingWallet::new("http://localhost:3333".to_string());
         let tokens = wallet.mint_gaming_tokens(3, "mana").await.unwrap();
         
-        // Same C value should always generate same army seed
+        // Same C value should always generate same army
         for token in &tokens {
-            let seed1 = token.generate_army_seed();
-            let seed2 = token.generate_army_seed();
-            assert_eq!(seed1, seed2);
+            let army1 = token.generate_army(0);
+            let army2 = token.generate_army(0);
+            
+            // Compare armies by serializing to JSON
+            let army1_json = serde_json::to_string(&army1).unwrap();
+            let army2_json = serde_json::to_string(&army2).unwrap();
+            assert_eq!(army1_json, army2_json);
         }
     }
 }

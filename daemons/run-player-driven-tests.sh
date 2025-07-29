@@ -78,6 +78,10 @@ start_services() {
     check_service "Nostr Relay" $NOSTR_RELAY_PORT
     
     echo -e "${GREEN}✅ All services started successfully${NC}"
+    
+    # Give game engine extra time to process historical Nostr events
+    echo -e "${YELLOW}⏳ Allowing game engine to process historical events...${NC}"
+    sleep 3
 }
 
 # Function to stop services

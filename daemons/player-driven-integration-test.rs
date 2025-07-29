@@ -907,6 +907,7 @@ impl PlayerDrivenTestSuite {
         let loot_nudge = json!({
             "action": "issue_loot",
             "match_id": match_id,
+            "winner_npub": winner_npub,
             "relay_url": self.relay_url,
             "mint_url": self.mint_url
         });

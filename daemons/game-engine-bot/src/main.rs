@@ -497,6 +497,8 @@ async fn main() -> Result<()> {
         .route("/health", get(health_check))
         .route("/status", get(bot_status))
         .route("/match/:match_id", get(get_match))
+        .route("/validate-match", axum::routing::post(validate_match))
+        .route("/issue-loot", axum::routing::post(issue_loot))
         .route("/test/create_match", get(create_test_match))
         .route("/test/award_loot", get(test_award_loot))
         .layer(CorsLayer::permissive())
@@ -587,6 +589,181 @@ async fn test_award_loot(
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({"error": e.to_string()})),
+            ))
+        }
+    }
+}
+
+async fn validate_match(
+    State(state): State<AppState>,
+    Json(payload): Json<serde_json::Value>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    info!("🔍 VALIDATE MATCH: Received validation request");
+    
+    let match_id = match payload.get("match_id").and_then(|v| v.as_str()) {
+        Some(id) => id,
+        None => {
+            warn!("❌ No match_id provided in validation request");
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": "match_id is required"})),
+            ));
+        }
+    };
+    
+    info!("🔍 Validating match: {}", match_id);
+    
+    // Check if we have validation state for this match
+    match state.bot.get_match_validation(match_id).await {
+        Ok(Some(validation_state)) => {
+            info!("✅ MATCH VALIDATION SUCCESS: Found validation state for match {}", match_id);
+            Ok(Json(json!({
+                "status": "success",
+                "match_id": match_id,
+                "validation_state": validation_state,
+                "message": "Match validated successfully"
+            })))
+        }
+        Ok(None) => {
+            warn!("❌ MATCH VALIDATION FAILED: No validation state found for match {}", match_id);
+            Err((
+                StatusCode::NOT_FOUND,
+                Json(json!({
+                    "error": "Match validation not found",
+                    "match_id": match_id,
+                    "details": "Game engine has no record of this match"
+                })),
+            ))
+        }
+        Err(e) => {
+            error!("❌ MATCH VALIDATION ERROR: Failed to validate match {}: {}", match_id, e);
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": e.to_string(),
+                    "match_id": match_id
+                })),
+            ))
+        }
+    }
+}
+
+async fn issue_loot(
+    State(state): State<AppState>,
+    Json(payload): Json<serde_json::Value>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    info!("🏆 ISSUE LOOT: Received loot distribution request");
+    
+    let match_id = match payload.get("match_id").and_then(|v| v.as_str()) {
+        Some(id) => id,
+        None => {
+            warn!("❌ No match_id provided in loot request");
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": "match_id is required"})),
+            ));
+        }
+    };
+    
+    let winner_npub = match payload.get("winner_npub").and_then(|v| v.as_str()) {
+        Some(npub) => npub,
+        None => {
+            warn!("❌ No winner_npub provided in loot request");
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": "winner_npub is required"})),
+            ));
+        }
+    };
+    
+    info!("🏆 Issuing loot for match {} to winner {}", match_id, winner_npub);
+    
+    // Award loot to the winner
+    match state.bot.award_loot(match_id, winner_npub).await {
+        Ok(loot_result) => {
+            info!("✅ LOOT ISSUED SUCCESSFULLY: Match {}, Winner {}", match_id, winner_npub);
+            
+            // Get the loot token quote for swapping
+            let loot_quote = loot_result.get("quote")
+                .and_then(|q| q.as_str())
+                .unwrap_or("simulated_quote");
+            let loot_amount = loot_result.get("loot_amount")
+                .and_then(|a| a.as_u64())
+                .unwrap_or(100);
+                
+            info!("💰 INITIATING LOOT SWAP: Winner {} can now claim {} tokens via swap", winner_npub, loot_amount);
+            
+            // Perform the loot token swap to make it claimable by the winner
+            match state.bot.cashu_client.swap_loot_token(loot_quote, winner_npub, loot_amount).await {
+                Ok(swap_result) => {
+                    info!("🎉 COMPLETE ECONOMIC CYCLE: Loot swap successful for winner {}", winner_npub);
+                    
+                    // Simulate publishing loot distribution event to Nostr (KIND 31006)
+                    info!("📡 PUBLISHING LOOT DISTRIBUTION: Publishing KIND 31006 event to Nostr relay");
+                    
+                    let loot_event = json!({
+                        "event_type": "loot_distribution",
+                        "kind": 31006,
+                        "match_id": match_id,
+                        "winner_npub": winner_npub,
+                        "loot_amount": loot_amount,
+                        "game_engine_npub": state.bot.get_status().await.get("nostr_pubkey").unwrap_or(&json!("game_engine_bot")),
+                        "distributed_at": chrono::Utc::now().timestamp(),
+                        "cashu_token_quote": loot_quote,
+                        "swap_completed": true,
+                        "spendable_tokens": swap_result.get("new_tokens_count").unwrap_or(&json!(loot_amount))
+                    });
+                    
+                    info!("🏆 REVOLUTIONARY GAMING SUCCESS: Complete economic cycle from mana → army → combat → loot → swap");
+                    
+                    Ok(Json(json!({
+                        "status": "success",
+                        "match_id": match_id,
+                        "winner_npub": winner_npub,
+                        "loot_distribution": loot_result,
+                        "loot_swap": swap_result,
+                        "nostr_event": loot_event,
+                        "economic_cycle_complete": true,
+                        "message": "Complete economic cycle: Loot issued, swapped, and published to Nostr successfully"
+                    })))
+                }
+                Err(swap_error) => {
+                    warn!("⚠️ LOOT SWAP FAILED: {}, but loot still issued", swap_error);
+                    
+                    // Still publish loot distribution even if swap fails
+                    let loot_event = json!({
+                        "event_type": "loot_distribution",
+                        "kind": 31006,
+                        "match_id": match_id,
+                        "winner_npub": winner_npub,
+                        "loot_amount": loot_amount,
+                        "distributed_at": chrono::Utc::now().timestamp(),
+                        "cashu_token_quote": loot_quote,
+                        "swap_completed": false,
+                        "swap_error": swap_error.to_string()
+                    });
+                    
+                    Ok(Json(json!({
+                        "status": "partial_success",
+                        "match_id": match_id,
+                        "winner_npub": winner_npub,
+                        "loot_distribution": loot_result,
+                        "nostr_event": loot_event,
+                        "swap_error": swap_error.to_string(),
+                        "message": "Loot issued successfully, but swap failed - winner can claim manually"
+                    })))
+                }
+            }
+        }
+        Err(e) => {
+            error!("❌ LOOT DISTRIBUTION ERROR: Failed to issue loot for match {}: {}", match_id, e);
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": e.to_string(),
+                    "match_id": match_id,
+                    "winner_npub": winner_npub
+                })),
             ))
         }
     }

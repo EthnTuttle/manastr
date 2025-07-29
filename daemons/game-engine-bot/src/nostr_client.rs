@@ -60,29 +60,32 @@ impl NostrClient {
     /// Start listening for player-driven match events
     pub async fn start_event_listener(&self) -> Result<(), GameEngineError> {
         // Subscribe to all player-driven match event types
+        // For integration testing, we listen from 1 hour ago to catch recent events
+        let since_timestamp = nostr::Timestamp::now() - 3600; // 1 hour ago
+        
         let challenge_filter = nostr::Filter::new()
             .kind(KIND_MATCH_CHALLENGE)
-            .since(nostr::Timestamp::now());
+            .since(since_timestamp);
 
         let acceptance_filter = nostr::Filter::new()
             .kind(KIND_MATCH_ACCEPTANCE)
-            .since(nostr::Timestamp::now());
+            .since(since_timestamp);
 
         let token_reveal_filter = nostr::Filter::new()
             .kind(KIND_TOKEN_REVEAL)
-            .since(nostr::Timestamp::now());
+            .since(since_timestamp);
 
         let move_commitment_filter = nostr::Filter::new()
             .kind(KIND_MOVE_COMMITMENT)
-            .since(nostr::Timestamp::now());
+            .since(since_timestamp);
 
         let move_reveal_filter = nostr::Filter::new()
             .kind(KIND_MOVE_REVEAL)
-            .since(nostr::Timestamp::now());
+            .since(since_timestamp);
 
         let match_result_filter = nostr::Filter::new()
             .kind(KIND_MATCH_RESULT)
-            .since(nostr::Timestamp::now());
+            .since(since_timestamp);
 
         let subscription_id = self
             .client
@@ -99,19 +102,32 @@ impl NostrClient {
 
         info!("📡 Subscribed to player-driven match events with ID: {:?}", subscription_id);
 
-        // Start event processing loop
-        self.process_notifications().await;
+        // Start event processing loop in background task
+        let client_clone = self.client.clone();
+        let sender_clone = self.match_event_sender.clone();
+        tokio::spawn(async move {
+            let temp_client = NostrClient {
+                client: client_clone,
+                keys: Keys::generate(), // Dummy keys for processing
+                match_event_sender: sender_clone,
+            };
+            temp_client.process_notifications().await;
+        });
 
+        info!("🚀 Nostr event processing task started");
         Ok(())
     }
 
     /// Process incoming Nostr notifications
     async fn process_notifications(&self) {
         let mut notifications = self.client.notifications();
+        info!("🔍 Starting Nostr notification processing loop");
 
         while let Ok(notification) = notifications.recv().await {
             match notification {
                 RelayPoolNotification::Event { event, .. } => {
+                    info!("📥 NOSTR EVENT RECEIVED: kind={}, id={}, from={}", 
+                          event.kind, event.id, event.pubkey);
                     if let Err(e) = self.handle_event(&event).await {
                         error!("Failed to handle event {}: {}", event.id, e);
                     }
@@ -123,9 +139,12 @@ impl NostrClient {
                     warn!("Relay connection shutdown");
                     break;
                 }
-                _ => {}
+                _ => {
+                    debug!("Other notification: {:?}", notification);
+                }
             }
         }
+        warn!("🔍 Exited Nostr notification processing loop");
     }
 
     /// Handle incoming player-driven match events
