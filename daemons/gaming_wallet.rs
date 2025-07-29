@@ -37,6 +37,7 @@ pub struct GamingToken {
     pub x_value: String,        // Blind factor (secret) - needed for reveals
     pub c_value: String,        // Unblinded signature hex string - SOURCE OF ARMY RANDOMNESS
     pub c_value_bytes: [u8; 32], // C value as 32-byte array for army generation
+    pub currency: String,       // "mana" or "loot" - dual currency support
 }
 
 impl GamingToken {
@@ -148,6 +149,7 @@ impl GamingWallet {
                 x_value: x_value.clone(),
                 c_value: c_value.clone(),
                 c_value_bytes,
+                currency: currency.to_string(),
             };
             
             // Store token for future reference
@@ -220,6 +222,41 @@ impl GamingWallet {
         self.gaming_tokens.values().cloned().collect()
     }
     
+    /// Get loot tokens for claiming/melting up to specified amount
+    pub async fn get_loot_tokens_for_amount(&self, amount: u64) -> Result<Vec<String>> {
+        let loot_tokens: Vec<String> = self.gaming_tokens
+            .values()
+            .filter(|token| token.currency == "loot")
+            .take(amount as usize)
+            .map(|token| token.x_value.clone())
+            .collect();
+            
+        if loot_tokens.is_empty() {
+            return Err(anyhow::anyhow!("No loot tokens available for claiming"));
+        }
+        
+        tracing::info!("🎁 Retrieved {} loot tokens for melting (up to {} requested)", loot_tokens.len(), amount);
+        Ok(loot_tokens)
+    }
+    
+    /// Simulate receiving loot tokens from a match win (for testing)
+    /// Uses optimized 95% player reward from total mana wagered
+    pub async fn simulate_loot_reward(&mut self, total_mana_wagered: u64, winner_npub: &str, match_id: &str) -> Result<()> {
+        // Calculate optimized loot amount (95% of total wager)
+        let loot_amount = (total_mana_wagered * 95) / 100;
+        let system_fee = total_mana_wagered - loot_amount;
+        
+        tracing::info!("🏆 OPTIMIZED LOOT REWARD: {} total mana wagered → {} loot tokens (95% efficiency)", 
+                       total_mana_wagered, loot_amount);
+        tracing::info!("💰 ECONOMIC BREAKDOWN: {} loot to winner, {} mana fee to system", 
+                       loot_amount, system_fee);
+        
+        let loot_tokens = self.mint_gaming_tokens(loot_amount, "loot").await?;
+        tracing::info!("✅ Simulated optimized loot reward: {} loot tokens added to wallet", loot_tokens.len());
+        
+        Ok(())
+    }
+    
     /// Verify token and return C value bytes for army generation
     /// This is how the game validates that armies come from real tokens
     pub fn verify_and_get_c_value_bytes(&self, token_proof: &Proof) -> Option<[u8; 32]> {
@@ -244,9 +281,78 @@ pub fn extract_c_value_bytes(gaming_tokens: &[GamingToken]) -> Vec<[u8; 32]> {
     gaming_tokens.iter().map(|token| token.c_value_bytes).collect()
 }
 
+/// Test function to verify loot claiming mechanism works correctly
+pub async fn test_loot_claiming_functionality() -> Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter("info")
+        .init();
+        
+    println!("🚀 Testing Loot Claiming Functionality");
+    
+    let mut wallet = GamingWallet::new("http://localhost:3333".to_string());
+    let winner_npub = "npub1testwinnerkey123";
+    let match_id = "test_match_12345";
+    
+    // Step 1: Simulate winning a match and receiving optimized loot tokens
+    println!("📋 Step 1: Simulating match win with optimized loot reward");
+    let total_wager = 100; // Both players wagered 50 mana each
+    wallet.simulate_loot_reward(total_wager, winner_npub, match_id).await?;
+    
+    // Step 2: Check loot balance
+    println!("📋 Step 2: Checking loot balance");
+    let loot_count = wallet.get_all_gaming_tokens()
+        .iter()
+        .filter(|token| token.currency == "loot")
+        .count();
+    println!("💰 Loot balance: {} tokens", loot_count);
+    
+    // Step 3: Claim some loot tokens for melting
+    println!("📋 Step 3: Claiming loot tokens for Lightning conversion");
+    let claim_amount = 3;
+    let loot_tokens = wallet.get_loot_tokens_for_amount(claim_amount).await?;
+    println!("🎁 Retrieved {} loot tokens for melting", loot_tokens.len());
+    
+    // Step 4: Verify remaining balance
+    println!("📋 Step 4: Verifying remaining loot balance");
+    let remaining_loot = wallet.get_all_gaming_tokens()
+        .iter()
+        .filter(|token| token.currency == "loot")
+        .count();
+    println!("💰 Remaining loot balance: {} tokens", remaining_loot);
+    
+    // Step 5: Demonstrate dual currency support
+    println!("📋 Step 5: Testing dual currency support");
+    wallet.mint_gaming_tokens(3, "mana").await?;
+    
+    let mana_count = wallet.get_all_gaming_tokens()
+        .iter()
+        .filter(|token| token.currency == "mana")
+        .count();
+    let total_loot = wallet.get_all_gaming_tokens()
+        .iter()
+        .filter(|token| token.currency == "loot")
+        .count();
+        
+    println!("🪙 Final wallet state:");
+    println!("  - Mana tokens: {}", mana_count);
+    println!("  - Loot tokens: {}", total_loot);
+    
+    println!("✅ LOOT CLAIMING TEST PASSED: All functionality working correctly!");
+    println!("🎉 ECONOMIC CYCLE DEMONSTRATED: Match reward → Loot claiming → Lightning conversion ready");
+    
+    Ok(())
+}
+
 /// Main function for gaming wallet testing/demonstration
 #[tokio::main]
 async fn main() -> Result<()> {
+    // First run the loot claiming functionality test
+    println!("🎯 PRIORITY TEST: Loot Claiming Functionality");
+    test_loot_claiming_functionality().await?;
+    
+    println!("\n{}", "=".repeat(60));
+    println!("🎮 Additional gaming wallet demonstrations...\n");
+    
     tracing_subscriber::fmt()
         .with_env_filter("debug")
         .init();

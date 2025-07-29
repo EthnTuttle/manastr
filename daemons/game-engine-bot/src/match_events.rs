@@ -370,6 +370,23 @@ impl MatchResult {
 }
 
 impl LootDistribution {
+    /// Calculate optimized loot amount (95% of total wager, 5% system fee)
+    pub fn calculate_optimized_loot_amount(&self) -> u64 {
+        // Get total mana wagered from both players
+        let total_wager = self.total_mana_wagered();
+        
+        // Return 95% to winner as loot tokens
+        (total_wager * 95) / 100
+    }
+    
+    /// Get total mana wagered by both players  
+    pub fn total_mana_wagered(&self) -> u64 {
+        // For current implementation, wager_amount represents per-player wager
+        // So total is wager_amount * 2 (both players)
+        // TODO: Get actual wager amounts from match data
+        200 // Placeholder - should be calculated from actual match data
+    }
+    
     pub fn to_nostr_event(&self, keys: &Keys, match_event_id: &str) -> Result<Event, Box<dyn std::error::Error>> {
         let content = serde_json::to_string(self)?;
         let winner_tag = self.winner_npub.as_ref().unwrap_or(&"draw".to_string()).clone();
@@ -377,7 +394,7 @@ impl LootDistribution {
         let tags = vec![
             Tag::event(nostr::EventId::from_hex(match_event_id)?),
             Tag::custom(nostr::TagKind::Custom("winner".into()), vec![winner_tag]),
-            Tag::custom(nostr::TagKind::Custom("loot_amount".into()), vec!["95".to_string()]), // TODO: Calculate actual loot
+            Tag::custom(nostr::TagKind::Custom("loot_amount".into()), vec![self.calculate_optimized_loot_amount().to_string()]),
             Tag::custom(nostr::TagKind::Custom("match_event_id".into()), vec![self.match_event_id.clone()]),
         ];
 

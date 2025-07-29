@@ -307,7 +307,7 @@ This is **not critical** for MVP since focus is client-driven resolution with au
      tags: [
        ["e", match_acceptance_event_id],
        ["p", winner_npub],
-       ["loot_amount", "95"], // 100 mana - 5% fee
+       ["loot_amount", "95"], // 100 mana * 95% = 95 loot (optimized player reward)
        ["match_id", match_id]
      ],
      content: JSON.stringify({
@@ -315,7 +315,7 @@ This is **not critical** for MVP since focus is client-driven resolution with au
        match_id: match_id,
        winner_npub: winner_npub,
        loot_cashu_token: loot_token,     // Actual Loot token for winner
-       match_fee: 5,                     // 5% fee taken
+       match_fee: 5,                     // 5% system fee (optimized for sustainability)
        loot_issued_at: timestamp,
        validation_summary: {
          commitments_valid: true,
