@@ -9,7 +9,7 @@ pub mod commitment;
 
 // Re-export public types
 pub use game_state::{Unit, Ability, RoundResult};
-pub use combat::{generate_units_from_token_secret, process_combat};
+pub use combat::{generate_units_from_token_secret, generate_army_from_cashu_c_value, process_combat};
 pub use commitment::*;
 
 // WASM initialization

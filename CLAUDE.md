@@ -87,10 +87,10 @@ just status         # Show system component status
 ## Revolutionary Implementation Status 🚀
 
 ### ✅ CORE ARCHITECTURE COMPLETE
-| Component | Status | Revolutionary Feature | Port |
-|-----------|--------|---------------------|------|
-| **Player-Driven Match Flow** | ✅ Complete | 7 Nostr event types with commitment/reveal | - |
-| **Game Engine Validator** | ✅ Complete | Pure validation, zero coordination authority | :4444 |
+| Component | Status | Revolutionary Feature | Communication |
+|-----------|--------|---------------------|---------------|
+| **Player-Driven Match Flow** | ✅ Complete | 7 Nostr event types with commitment/reveal | Pure Nostr |
+| **Game Engine State Machine** | ✅ Complete | Concurrent match tracking with formal state transitions | Pure Nostr |
 | **Shared WASM Logic** | ✅ Complete | Client-server synchronization via deterministic Rust | - |
 | **Anti-Cheat System** | ✅ Complete | Cryptographic commitment verification | - |
 | **Nostr Relay** | ✅ Complete | Decentralized event coordination (strfry) | :7777 |
@@ -112,12 +112,60 @@ just status         # Show system component status
 - **Cryptographic anti-cheat** prevents cheating without requiring trusted centralized authority
 - **Perfect decentralization** aligned with Bitcoin/Nostr principles
 
+### 🔑 **CRITICAL INTEGRATION PRINCIPLE**: Maximal Rust Functionality
+
+**RULE**: Integration tests should have **maximal functionality implemented in Rust** rather than shell scripts.
+
+**Why This Matters**:
+- **Shell scripts are fragile** - prone to breaking on different environments/timing
+- **Rust integration tests are reliable** - proper error handling, type safety, async/await
+- **Better debugging** - Rust stack traces vs shell script failures
+- **Cross-platform consistency** - Rust works identically on all platforms
+- **Real testing** - Tests the actual Rust APIs, not shell process management
+
+**Implementation Requirements**:
+- ✅ **Rust Integration Tests** should control service startup/shutdown internally
+- ✅ **Service Health Checks** should be done via Rust APIs, not HTTP calls
+- ✅ **State Machine Verification** should test actual Rust state transitions
+- ✅ **Event Processing** should verify real Nostr event handling in Rust
+- ⚠️ **Shell Scripts** should be minimal wrappers that call Rust integration tests
+
+**Future Development**:
+- Move service orchestration logic from `run-player-driven-tests.sh` into Rust
+- Create comprehensive Rust-based integration test suite
+- Use shell scripts only for environment setup (build, cleanup)
+- Test real game engine APIs rather than external process monitoring
+
+**Example Architecture**:
+```rust
+#[tokio::test]
+async fn test_complete_player_driven_match() {
+    // Start services internally via Rust APIs
+    let cashu_mint = start_test_cashu_mint().await;
+    let game_engine = start_test_game_engine().await;
+    let nostr_relay = start_test_nostr_relay().await;
+    
+    // Test actual state machine transitions
+    let match_id = create_test_match(&game_engine).await;
+    verify_state_transition(&game_engine, &match_id, MatchState::Challenged).await;
+    
+    // Test real event processing
+    process_acceptance_event(&game_engine, &match_id).await;
+    verify_state_transition(&game_engine, &match_id, MatchState::Accepted).await;
+    
+    // Cleanup handled by Rust Drop traits
+}
+```
+
+This principle ensures **reliable, cross-platform, maintainable integration testing**.
+
 ### 🏗️ IMPLEMENTATION ACHIEVEMENTS
 - ✅ **7 Player-Driven Event Types** (Nostr kinds 31000-31006)
 - ✅ **Real-Time Commitment Verification** with automatic match invalidation on cheating
 - ✅ **MatchValidationManager** for pure validation without coordination
 - ✅ **Shared Cryptographic Functions** preventing client-server desynchronization
 - ✅ **Complete Refactoring** from centralized matchmaker to pure validator
+- ✅ **State Machine Architecture** for concurrent match processing with memory efficiency
 
 ## Current Architecture Status 🎯
 
@@ -139,17 +187,23 @@ The revolutionary **zero-coordination** architecture is fully implemented:
 6. **Kind 31005** - Match Result (Player submits final match state)
 7. **Kind 31006** - Loot Distribution (Game Engine's ONLY authoritative event)
 
-#### 🎮 **Game Engine as Pure Validator**
+#### 🎮 **Game Engine as State Machine Validator**
+- **State Machine Architecture** - Formal state transitions for all match phases
+- **Concurrent Match Tracking** - Handles multiple matches in parallel with isolated state
+- **Pure Nostr Communication** - No HTTP endpoints, operates entirely via Nostr events
 - **NO match creation authority** - players create matches
-- **NO coordination required** - players drive entire flow
+- **NO coordination required** - players drive entire flow via state transitions
 - **ONLY validates outcomes** - checks commitments and distributes loot
 - **Perfect decentralization** - cannot interfere with player choices
 
 ### Implementation Quality Metrics ✅
+- **✅ State Machine Architecture** - Formal state transitions with concurrent match support
+- **✅ Pure Nostr Communication** - No HTTP endpoints, operates entirely via Nostr events
 - **✅ 0 Compilation Errors** - Complete refactoring successful
 - **✅ 7 Event Types Implemented** - Full player-driven flow
 - **✅ Real-Time Anti-Cheat** - Cryptographic commitment verification
 - **✅ Match Invalidation** - Automatic cheating detection and response
+- **✅ Concurrent Processing** - Multiple matches tracked simultaneously with isolated state
 - **✅ Future Enhancement Ready** - Multi-round wagers and custom victory conditions
 
 ## Revolutionary Achievement Summary 🏆
@@ -176,6 +230,43 @@ This implementation represents a **fundamental breakthrough** in multiplayer gam
 - **⚡ Future-Proof**: Architecture supports complex tournament formats
 
 This is not just a game implementation - it's a **new paradigm for decentralized multiplayer gaming** that could revolutionize the entire industry by eliminating the need for trusted game servers.
+
+## State Machine Architecture 🤖
+
+### Revolutionary Match State Machine
+The game engine now operates using a formal state machine that tracks matches through distinct phases:
+
+#### **Match States**:
+1. **Challenged** - Match challenge posted, waiting for acceptance
+2. **Accepted** - Challenge accepted, waiting for token reveals  
+3. **InCombat** - Both tokens revealed, combat rounds in progress
+4. **AwaitingValidation** - Match completed, waiting for validation and loot distribution
+5. **Completed** - Match validated, loot distributed
+6. **Invalid** - Match invalidated due to cheating or errors
+
+#### **State Transitions**:
+- **Event-Driven** - All transitions triggered by Nostr events
+- **Atomic** - Each transition is validated and produces actions
+- **Concurrent** - Multiple matches processed simultaneously with isolated state
+- **Self-Healing** - Automatic timeout and cleanup mechanisms
+
+#### **Action Processing**:
+```rust
+// Generated actions from state transitions
+GameEngineAction::ValidateTokenCommitment { match_id, player_npub }
+GameEngineAction::GenerateArmies { match_id }
+GameEngineAction::ExecuteCombatRound { match_id, round }
+GameEngineAction::ValidateMatchResult { match_id }
+GameEngineAction::DistributeLoot { match_id, winner_npub }
+GameEngineAction::PublishLootEvent { match_id, loot_distribution }
+```
+
+#### **Benefits**:
+- **Memory Efficient** - Automatic cleanup of terminal matches
+- **Fault Tolerant** - Invalid transitions are logged but don't crash the system
+- **Scalable** - Configurable concurrent match limits
+- **Observable** - Rich statistics and state introspection
+- **Pure Nostr** - Zero HTTP endpoints, operates entirely via Nostr events
 
 ## Implementation Architecture 🏗️
 

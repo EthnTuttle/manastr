@@ -47,6 +47,29 @@ check_service() {
     return 1
 }
 
+# Function to check if game engine state machine is running
+check_game_engine_state_machine() {
+    local max_attempts=30
+    local attempt=1
+
+    echo -e "${YELLOW}⏳ Waiting for Game Engine State Machine to be ready...${NC}"
+    
+    while [ $attempt -le $max_attempts ]; do
+        # Check if process is running and log shows successful initialization
+        if kill -0 $GAME_ENGINE_PID 2>/dev/null && grep -q "Game Engine Bot fully operational" ../game-engine.log 2>/dev/null; then
+            echo -e "${GREEN}✅ Game Engine State Machine is ready${NC}"
+            return 0
+        fi
+        
+        echo -e "   Attempt $attempt/$max_attempts - waiting..."
+        sleep 2
+        ((attempt++))
+    done
+    
+    echo -e "${RED}❌ Game Engine State Machine failed to start within $((max_attempts * 2)) seconds${NC}"
+    return 1
+}
+
 # Function to start required services
 start_services() {
     echo -e "${PURPLE}🏗️ Starting required services...${NC}"
@@ -74,7 +97,7 @@ start_services() {
     
     # Wait for services to be ready
     check_service "Cashu Mint" $CASHU_MINT_PORT
-    check_service "Game Engine Bot" $GAME_ENGINE_PORT
+    check_game_engine_state_machine
     check_service "Nostr Relay" $NOSTR_RELAY_PORT
     
     echo -e "${GREEN}✅ All services started successfully${NC}"
