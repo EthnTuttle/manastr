@@ -418,7 +418,7 @@ impl MatchValidationManager {
         player_match: &PlayerMatch,
         player1_army: &[shared_game_logic::game_state::Unit; 8],
         player2_army: &[shared_game_logic::game_state::Unit; 8],
-        claimed_rounds: &[serde_json::Value]
+        _claimed_rounds: &[serde_json::Value]
     ) -> Result<Vec<shared_game_logic::game_state::RoundResult>, GameEngineError> {
         use tracing::{debug, info, warn};
         use shared_game_logic::combat::process_combat;

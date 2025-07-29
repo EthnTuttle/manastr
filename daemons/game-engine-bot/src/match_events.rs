@@ -18,7 +18,7 @@ pub const KIND_MATCH_RESULT: Kind = Kind::Custom(31005);
 pub const KIND_LOOT_DISTRIBUTION: Kind = Kind::Custom(31006);
 
 /// Match challenge created by Player 1
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MatchChallenge {
     pub challenger_npub: String,         // Serialized as string for JSON, but should be PublicKey
     pub wager_amount: u64,
@@ -31,7 +31,7 @@ pub struct MatchChallenge {
 }
 
 /// Match acceptance by Player 2
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MatchAcceptance {
     pub acceptor_npub: String,
     pub match_event_id: String,          // References the challenge EventId
@@ -73,7 +73,7 @@ pub struct MoveReveal {
 }
 
 /// Final match result published by both players
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MatchResult {
     pub player_npub: String,
     pub match_event_id: String,          // References the challenge EventId
@@ -84,7 +84,7 @@ pub struct MatchResult {
 }
 
 /// Loot distribution by Game Engine Bot (ONLY authoritative event from bot)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LootDistribution {
     pub game_engine_npub: String,
     pub match_event_id: String,          // References the challenge EventId
@@ -96,7 +96,7 @@ pub struct LootDistribution {
 }
 
 /// Summary of game engine validation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ValidationSummary {
     pub commitments_valid: bool,
     pub combat_verified: bool,
@@ -139,14 +139,14 @@ pub enum MatchPhase {
     Invalid(String),   // Match invalid (cheating detected, etc.)
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PlayerCommitments {
     pub cashu_tokens: Option<String>,
     pub army: Option<String>,
     pub moves_by_round: HashMap<u32, String>, // round -> commitment
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PlayerReveals {
     pub cashu_tokens: Option<Vec<String>>,
     pub token_nonce: Option<String>,

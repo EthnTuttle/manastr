@@ -54,7 +54,7 @@ pub enum MatchState {
 }
 
 /// Core match data that persists across states
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MatchData {
     pub match_event_id: String,
     pub player1_npub: String,
@@ -128,7 +128,7 @@ impl MatchState {
             (MatchState::Challenged { challenge, .. }, MatchEvent::ChallengeAccepted(acceptance)) => {
                 info!("🤝 Challenge accepted, waiting for token reveals");
                 
-                let match_data = MatchData::new(&challenge, &acceptance);
+                let _match_data = MatchData::new(&challenge, &acceptance);
                 let new_state = MatchState::Accepted {
                     challenge,
                     acceptance,
@@ -203,7 +203,7 @@ impl MatchState {
 
             // Move committed during combat
             (MatchState::InCombat { 
-                mut match_data, 
+                match_data, 
                 current_round, 
                 completed_rounds,
                 mut player1_committed,
@@ -213,7 +213,7 @@ impl MatchState {
             }, MatchEvent::MoveCommitted(commitment)) => {
                 
                 let round = commitment.round_number;
-                let mut actions = vec![
+                let actions = vec![
                     GameEngineAction::ValidateMoveCommitment {
                         match_id: commitment.match_event_id.clone(),
                         player_npub: commitment.player_npub.clone(),
@@ -328,20 +328,23 @@ impl MatchState {
                 
                 info!("🏆 Loot distributed, match completed");
                 
+                let match_id = loot_distribution.match_event_id.clone();
+                let loot_distribution_clone = loot_distribution.clone();
+                
                 let new_state = MatchState::Completed {
                     match_data,
                     result,
-                    loot_distribution: loot_distribution.clone(),
+                    loot_distribution: loot_distribution_clone,
                     completed_at: Utc::now(),
                 };
                 
                 let actions = vec![
                     GameEngineAction::PublishLootEvent {
-                        match_id: loot_distribution.match_event_id.clone(),
+                        match_id: match_id.clone(),
                         loot_distribution,
                     },
                     GameEngineAction::ArchiveMatch {
-                        match_id: loot_distribution.match_event_id.clone(),
+                        match_id,
                     }
                 ];
 
@@ -434,21 +437,21 @@ impl MatchData {
             match_event_id: acceptance.match_event_id.clone(),
             player1_npub: challenge.challenger_npub.clone(),
             player2_npub: acceptance.acceptor_npub.clone(),
-            league_id: challenge.league_id,
+            league_id: challenge.league_id as u32,
             wager_amount: challenge.wager_amount,
             
             player1_commitments: PlayerCommitments {
                 cashu_tokens: Some(challenge.cashu_token_commitment.clone()),
-                army_composition: Some(challenge.army_commitment.clone()),
+                army: Some(challenge.army_commitment.clone()),
                 moves_by_round: HashMap::new(),
             },
             player2_commitments: PlayerCommitments {
                 cashu_tokens: Some(acceptance.cashu_token_commitment.clone()),
-                army_composition: Some(acceptance.army_commitment.clone()),
+                army: Some(acceptance.army_commitment.clone()),
                 moves_by_round: HashMap::new(),
             },
-            player1_reveals: PlayerReveals::new(),
-            player2_reveals: PlayerReveals::new(),
+            player1_reveals: PlayerReveals::default(),
+            player2_reveals: PlayerReveals::default(),
             
             player1_army: None,
             player2_army: None,
