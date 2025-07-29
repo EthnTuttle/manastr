@@ -1,0 +1,71 @@
+# 🔐 GAME ENGINE AUTHORIZATION CONFIGURATION
+# ==========================================
+#
+# This file controls which game engines are authorized to interact with the Cashu mint.
+# 
+# 🚨 CRITICAL SECURITY: Only authorized game engines can:
+# - Burn mana tokens after match validation
+# - Query token spent status for anti-cheat
+# - Request loot token minting for winners
+#
+# 🔄 HOT RELOADABLE: Changes to this file are automatically picked up at runtime
+# when `allow_runtime_updates = true` in mint.toml
+#
+# 📝 UPDATE INSTRUCTIONS:
+# 1. Add new game engine: Add new [[authorized_game_engines]] entry  
+# 2. Disable game engine: Set `active = false`
+# 3. Update permissions: Modify the permissions block
+# 4. Save file: Changes apply within seconds (no restart needed)
+
+# Global authorization settings
+allow_runtime_updates = true
+auth_config_file = "game-engine-auth.toml"
+
+# Test Game Engine (for development and testing)
+[[authorized_game_engines]]
+name = "Test Game Engine"
+nostr_pubkey_hex = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+active = true
+
+[authorized_game_engines.permissions]
+can_burn_mana = true                # Can burn mana tokens after match validation
+can_query_spent_status = true       # Can query if tokens are spent (anti-cheat)
+can_mint_loot = true               # Can request loot token minting
+max_tokens_per_request = 1000      # Maximum tokens processed per request
+
+# Production Game Engine (example - replace with real keys)
+[[authorized_game_engines]]
+name = "Production Game Engine v1.0"
+nostr_pubkey_hex = "03f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"
+active = false  # Disabled until production deployment
+
+[authorized_game_engines.permissions]
+can_burn_mana = true
+can_query_spent_status = true  
+can_mint_loot = true
+max_tokens_per_request = 10000
+
+# Backup Game Engine (for failover scenarios)
+[[authorized_game_engines]]
+name = "Backup Game Engine"
+nostr_pubkey_hex = "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5"
+active = false  # Disabled by default
+
+[authorized_game_engines.permissions]
+can_burn_mana = true
+can_query_spent_status = true
+can_mint_loot = true
+max_tokens_per_request = 5000
+
+# 🔒 SECURITY NOTES:
+# - nostr_pubkey_hex: The game engine's Nostr public key in compressed format (33 bytes hex)
+# - All mana burn requests MUST be signed by the corresponding private key
+# - Permissions are enforced at the API level - unauthorized requests are rejected
+# - max_tokens_per_request: Prevents abuse via rate limiting
+# - Set active = false to immediately disable a game engine without removal
+
+# 🛠️ OPERATIONAL PROCEDURES:
+# - Rotate game engine keys: Add new entry, disable old entry, deploy new key to game engine
+# - Emergency disable: Set active = false for immediate effect
+# - Permission updates: Modify permissions block and save
+# - Monitoring: Check mint logs for authorization failures and suspicious activity
