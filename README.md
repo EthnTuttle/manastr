@@ -47,6 +47,24 @@
 
 **Result**: Impossible to cheat without detection, no trusted authority required!
 
+## ✅ **INTEGRATION TEST: DEFINITIVE SYSTEM VALIDATION**
+
+**CRITICAL**: The integration test is the **definitive documentation** of how Manastr works. Run this to see the complete system in action:
+
+```bash
+just integration  # The authoritative proof the system works
+```
+
+**What the integration test proves:**
+- ✅ Complete 9-phase player-driven match flow (all 7 Nostr event types)
+- ✅ Optimized economics: 95% player rewards, 5% system fee
+- ✅ Revolutionary architecture: Zero-coordination gaming operational
+- ✅ Cryptographic anti-cheat: Commitment/reveal working in practice
+- ✅ Service orchestration: All 3 services working together
+- ✅ Event chain integrity: Chronological order and references verified
+
+**The integration test IS the system - run it to understand how Manastr works!**
+
 ## 🚀 Development Status
 
 **✅ Revolutionary Architecture Complete!**

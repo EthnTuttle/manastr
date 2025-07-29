@@ -25,8 +25,15 @@ default:
     @echo "🏛️ Mana Strategy Game - Revolutionary Zero-Coordination Gaming"
     @echo "=============================================================="
     @echo ""
+    @echo "✅ DEFINITIVE SYSTEM VALIDATION:"
+    @echo "   just integration    # THE authoritative proof the system works"
+    @echo ""
     @echo "Available commands:"
     @just --list --unsorted
+    @echo ""
+    @echo "🎯 IMPORTANT: The integration test is the definitive documentation"
+    @echo "   of how Manastr works. Run 'just integration' to see the complete"
+    @echo "   revolutionary zero-coordination gaming system in action!"
     @echo ""
     @echo "🚀 Quick start:"
     @echo "  just build     # Build everything"
@@ -88,13 +95,21 @@ demo:
     @echo ""
     cd daemons && cargo run --release --bin gaming-wallet-test
 
-# Run the complete player-driven integration test
+# 🏆 THE DEFINITIVE SYSTEM VALIDATION - Run this to see Manastr in action!
 integration:
     @echo "🚀 RUNNING REVOLUTIONARY ZERO-COORDINATION INTEGRATION TEST"
     @echo "==========================================================="
     @echo ""
-    @echo "This validates the world's first truly decentralized multiplayer"
-    @echo "gaming architecture with complete player control and anti-cheat."
+    @echo "✅ THE INTEGRATION TEST IS THE DEFINITIVE SYSTEM DOCUMENTATION"
+    @echo "This is the authoritative proof that revolutionary zero-coordination"
+    @echo "gaming works. It demonstrates:"
+    @echo "  • Complete 9-phase player-driven match flow"
+    @echo "  • Optimized economics: 95% player rewards"
+    @echo "  • Cryptographic anti-cheat system working"
+    @echo "  • All 7 Nostr event types (KIND 31000-31006)"
+    @echo "  • Service orchestration (Cashu + Game Engine + Nostr)"
+    @echo ""
+    @echo "🎯 IMPORTANT: This test IS the system - run it to understand Manastr!"
     @echo ""
     cd daemons && env RUST_LOG=info ./run-player-driven-tests.sh
 

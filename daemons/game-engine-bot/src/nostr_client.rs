@@ -59,48 +59,30 @@ impl NostrClient {
 
     /// Start listening for player-driven match events
     pub async fn start_event_listener(&self) -> Result<(), GameEngineError> {
-        // Subscribe to all player-driven match event types
-        // For integration testing, we listen from 1 hour ago to catch recent events
-        let since_timestamp = nostr::Timestamp::now() - 3600; // 1 hour ago
+        // OPTIMIZED FILTERING: Only process game-related Nostr events (KIND 31000-31005)
+        // This prevents wasting computational resources on non-game events
+        let since_timestamp = nostr::Timestamp::now() - 3600; // 1 hour ago for integration testing
         
-        let challenge_filter = nostr::Filter::new()
-            .kind(KIND_MATCH_CHALLENGE)
-            .since(since_timestamp);
-
-        let acceptance_filter = nostr::Filter::new()
-            .kind(KIND_MATCH_ACCEPTANCE)
-            .since(since_timestamp);
-
-        let token_reveal_filter = nostr::Filter::new()
-            .kind(KIND_TOKEN_REVEAL)
-            .since(since_timestamp);
-
-        let move_commitment_filter = nostr::Filter::new()
-            .kind(KIND_MOVE_COMMITMENT)
-            .since(since_timestamp);
-
-        let move_reveal_filter = nostr::Filter::new()
-            .kind(KIND_MOVE_REVEAL)
-            .since(since_timestamp);
-
-        let match_result_filter = nostr::Filter::new()
-            .kind(KIND_MATCH_RESULT)
+        // Single efficient filter for all game event types
+        let game_events_filter = nostr::Filter::new()
+            .kinds(vec![
+                KIND_MATCH_CHALLENGE,    // 31000 - Player creates match
+                KIND_MATCH_ACCEPTANCE,   // 31001 - Player accepts challenge  
+                KIND_TOKEN_REVEAL,       // 31002 - Player reveals Cashu tokens
+                KIND_MOVE_COMMITMENT,    // 31003 - Player commits to round moves
+                KIND_MOVE_REVEAL,        // 31004 - Player reveals actual moves
+                KIND_MATCH_RESULT,       // 31005 - Player submits final match state
+                // NOTE: KIND_LOOT_DISTRIBUTION (31006) excluded - game engine publishes this
+            ])
             .since(since_timestamp);
 
         let subscription_id = self
             .client
-            .subscribe(vec![
-                challenge_filter,
-                acceptance_filter,
-                token_reveal_filter,
-                move_commitment_filter,
-                move_reveal_filter,
-                match_result_filter,
-            ], None)
+            .subscribe(vec![game_events_filter], None)
             .await
             .map_err(|e| GameEngineError::NostrError(format!("Failed to subscribe: {}", e)))?;
 
-        info!("📡 Subscribed to player-driven match events with ID: {:?}", subscription_id);
+        info!("📡 🎯 OPTIMIZED FILTERING: Subscribed to game events only (KIND 31000-31005)");
 
         // Start event processing loop in background task
         let client_clone = self.client.clone();
@@ -121,22 +103,32 @@ impl NostrClient {
     /// Process incoming Nostr notifications
     async fn process_notifications(&self) {
         let mut notifications = self.client.notifications();
-        info!("🔍 Starting Nostr notification processing loop");
+        let mut processed_events = 0u64;
+        info!("🔍 Starting Nostr notification processing loop with optimized game event filtering");
 
         while let Ok(notification) = notifications.recv().await {
             match notification {
                 RelayPoolNotification::Event { event, .. } => {
-                    info!("📥 NOSTR EVENT RECEIVED: kind={}, id={}, from={}", 
+                    processed_events += 1;
+                    
+                    // Only game events (KIND 31000-31005) should reach here due to subscription filter
+                    debug!("📥 Game event received: kind={}, id={}, from={}", 
                           event.kind, event.id, event.pubkey);
+                    
                     if let Err(e) = self.handle_event(&event).await {
                         error!("Failed to handle event {}: {}", event.id, e);
+                    }
+                    
+                    // Periodic efficiency logging
+                    if processed_events % 100 == 0 {
+                        info!("📊 Processed {} game events (filtered subscription working efficiently)", processed_events);
                     }
                 }
                 RelayPoolNotification::Message { message, .. } => {
                     debug!("Relay message: {:?}", message);
                 }
                 RelayPoolNotification::Shutdown => {
-                    warn!("Relay connection shutdown");
+                    warn!("Relay connection shutdown after processing {} game events", processed_events);
                     break;
                 }
                 _ => {
@@ -144,14 +136,16 @@ impl NostrClient {
                 }
             }
         }
-        warn!("🔍 Exited Nostr notification processing loop");
+        warn!("🔍 Exited Nostr notification processing loop after {} game events", processed_events);
     }
 
     /// Handle incoming player-driven match events
     async fn handle_event(&self, event: &Event) -> Result<(), GameEngineError> {
-        debug!("Received event: {} from {}", event.kind, event.pubkey);
+        // OPTIMIZED: Game engine only processes game events (31000-31005)
+        // All other events are filtered out at subscription level for efficiency
+        debug!("🎮 Processing game event: {} from {}", event.kind, event.pubkey);
 
-        // Parse event based on kind
+        // Parse event based on kind - only game events should reach here due to subscription filter
         let player_event = match event.kind {
             kind if kind == KIND_MATCH_CHALLENGE => {
                 let challenge: MatchChallenge = serde_json::from_str(&event.content)
@@ -184,7 +178,8 @@ impl NostrClient {
                 PlayerMatchEvent::MatchResult(result)
             }
             _ => {
-                debug!("Ignoring unsupported event kind: {}", event.kind);
+                // This should never happen due to subscription filtering, but log for debugging
+                warn!("⚠️ Unexpected event kind received: {} (subscription filter may need update)", event.kind);
                 return Ok(());
             }
         };

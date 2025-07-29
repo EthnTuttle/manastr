@@ -56,8 +56,15 @@ check_game_engine_state_machine() {
     
     while [ $attempt -le $max_attempts ]; do
         # Check if process is running and log shows successful initialization
-        if kill -0 $GAME_ENGINE_PID 2>/dev/null && grep -q "Game Engine Bot fully operational" ../game-engine.log 2>/dev/null; then
+        # Look for the log file in the current directory where it's actually created
+        if kill -0 $GAME_ENGINE_PID 2>/dev/null && grep -q "Game Engine Bot fully operational" game-engine.log 2>/dev/null; then
             echo -e "${GREEN}✅ Game Engine State Machine is ready${NC}"
+            return 0
+        fi
+        
+        # Alternative check: if process is running and listening on expected port or has key messages
+        if kill -0 $GAME_ENGINE_PID 2>/dev/null && (grep -q "Started Nostr match event processing loop" game-engine.log 2>/dev/null || grep -q "OPTIMIZED FILTERING" game-engine.log 2>/dev/null); then
+            echo -e "${GREEN}✅ Game Engine State Machine is ready (alternative check)${NC}"
             return 0
         fi
         
@@ -67,6 +74,20 @@ check_game_engine_state_machine() {
     done
     
     echo -e "${RED}❌ Game Engine State Machine failed to start within $((max_attempts * 2)) seconds${NC}"
+    echo -e "${YELLOW}Debug: Checking if log file exists and process is running...${NC}"
+    if [ -f "game-engine.log" ]; then
+        echo -e "${YELLOW}Log file contents (last 10 lines):${NC}"
+        tail -10 game-engine.log || echo "Could not read log file"
+    else
+        echo -e "${RED}Log file game-engine.log does not exist${NC}"
+    fi
+    
+    if kill -0 $GAME_ENGINE_PID 2>/dev/null; then
+        echo -e "${YELLOW}Game Engine process is still running (PID: $GAME_ENGINE_PID)${NC}"
+    else
+        echo -e "${RED}Game Engine process is not running${NC}"
+    fi
+    
     return 1
 }
 

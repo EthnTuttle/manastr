@@ -1,5 +1,15 @@
 # Manastr Match Flow Specification - Player-Driven Commitment/Reveal
 
+## ✅ **INTEGRATION TEST: LIVE SYSTEM DEMONSTRATION**
+
+**CRITICAL**: This specification is demonstrated in practice by the integration test. To see the complete system working:
+
+```bash
+just integration  # Run this to see the actual match flow in action
+```
+
+**The integration test is the definitive proof** that all 9 phases work correctly with real Nostr events, real Cashu tokens, and complete service orchestration.
+
 ## Overview
 
 The Manastr game uses a **completely decentralized** approach where:
@@ -8,6 +18,8 @@ The Manastr game uses a **completely decentralized** approach where:
 - **All game state** is transmitted through signed Nostr events
 - **Commitment/Reveal scheme** ensures fair play without centralized coordination
 - **Cashu token C values** provide tamper-proof randomness for army generation
+
+**PROVEN OPERATIONAL**: The integration test validates this architecture works in practice!
 
 ## Army Generation from Cashu Tokens 🏛️
 
