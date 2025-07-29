@@ -35,5 +35,12 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 secp256k1 = "0.28"
 async-trait = "0.1"
 
+# Nostr for game engine authentication
+nostr = "0.37"
+hex = "0.4"
+
+# HTTP client for health checks
+reqwest = { version = "0.11", features = ["json"] }
+
 [dev-dependencies]
 tempfile = "3.8"

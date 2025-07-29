@@ -1,6 +1,5 @@
 use axum::{
     extract::{Path, State},
-    http::StatusCode,
     response::Json,
     routing::{get, post},
     Router,
@@ -10,12 +9,12 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
-use tracing::{info, warn};
+use tracing::info;
 use uuid::Uuid;
 
 use crate::errors::MintError;
 
-type SharedStubState = Arc<RwLock<StubMintState>>;
+pub type SharedStubState = Arc<RwLock<StubMintState>>;
 
 #[derive(Clone)]
 pub struct StubMintState {
@@ -146,7 +145,10 @@ impl StubMintState {
 
 pub fn create_stub_mint_router() -> Router {
     let state = Arc::new(RwLock::new(StubMintState::new()));
+    create_stub_mint_router_with_state(state)
+}
 
+pub fn create_stub_mint_router_with_state(state: SharedStubState) -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/v1/info", get(mint_info))

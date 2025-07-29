@@ -46,6 +46,12 @@ pub enum MintError {
     
     #[error("Configuration error: {0}")]
     Config(String),
+    
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
+    
+    #[error("Bad request: {0}")]
+    BadRequest(String),
 }
 
 impl IntoResponse for MintError {
@@ -89,6 +95,12 @@ impl IntoResponse for MintError {
             }
             MintError::Config(ref msg) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "CONFIG_ERROR", msg.clone())
+            }
+            MintError::Unauthorized(ref msg) => {
+                (StatusCode::UNAUTHORIZED, "UNAUTHORIZED", msg.clone())
+            }
+            MintError::BadRequest(ref msg) => {
+                (StatusCode::BAD_REQUEST, "BAD_REQUEST", msg.clone())
             }
         };
 

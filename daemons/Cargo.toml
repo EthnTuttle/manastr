@@ -15,6 +15,10 @@ path = "integration-test.rs"
 name = "gaming-wallet-test"
 path = "gaming_wallet.rs"
 
+[[bin]]
+name = "integration-runner"
+path = "src/integration_runner.rs"
+
 [dependencies]
 # Core async runtime
 tokio = { version = "1.0", features = ["full"] }
