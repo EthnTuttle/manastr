@@ -7,13 +7,14 @@ edition = "2021"
 name = "main"
 path = "main.rs"
 
-[[bin]]
-name = "player-driven-integration-test"
-path = "player-driven-integration-test.rs"
 
 [[bin]]
 name = "integration-runner"
 path = "integration_runner.rs"
+
+[[bin]]
+name = "gaming-wallet"
+path = "src/core/gaming_wallet.rs"
 
 [dependencies]
 # Use workspace dependencies for consistency

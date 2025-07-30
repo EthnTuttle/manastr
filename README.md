@@ -67,7 +67,7 @@ cargo run --bin integration-runner
 cd daemons/integration_tests
 
 # Start all services and run player-driven test
-cargo run --bin player-driven-integration-test
+cargo run --bin main
 
 # Or run just the Rust service orchestrator
 cargo run --bin integration-runner
