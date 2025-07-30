@@ -42,8 +42,7 @@ default:
     @echo "  just integration   # THE definitive system demonstration"
     @echo ""
     @echo "🎮 For comprehensive testing:"
-    @echo "  just integration        # Rust-first integration runner"
-    @echo "  just integration-player # Modularized test suite"
+    @echo "  just integration        # Complete service orchestration + game validation"
 
 # Build all components in the correct order
 build:
@@ -95,25 +94,17 @@ integration:
     @echo "✅ THE INTEGRATION TEST IS THE DEFINITIVE SYSTEM DOCUMENTATION"
     @echo "This is the authoritative proof that revolutionary zero-coordination"
     @echo "gaming works. It demonstrates:"
+    @echo "  • Service orchestration (Cashu + Game Engine + Nostr)"
     @echo "  • Complete 9-phase player-driven match flow"
     @echo "  • Optimized economics: 95% player rewards"
     @echo "  • Cryptographic anti-cheat system working"
     @echo "  • All 7 Nostr event types (KIND 31000-31006)"
-    @echo "  • Service orchestration (Cashu + Game Engine + Nostr)"
+    @echo "  • Concurrent match processing"
+    @echo "  • Edge case and stress testing"
     @echo ""
     @echo "🎯 IMPORTANT: This test IS the system - run it to understand Manastr!"
     @echo ""
     cd daemons/integration_tests && cargo run --bin integration-runner
-
-# Alternative integration test using main test suite
-integration-player:
-    @echo "🎮 RUNNING PLAYER-DRIVEN INTEGRATION TEST"
-    @echo "========================================="
-    @echo ""
-    @echo "This runs the complete player-driven match simulation"
-    @echo "using the modularized integration test suite."
-    @echo ""
-    cd daemons/integration_tests && cargo run --bin main
 
 # Format all Rust code
 fmt:
@@ -143,7 +134,7 @@ status:
     @echo "🏛️ Core Components:"
     @if [ -f "target/release/game-engine-bot" ]; then echo "  ✅ Game Engine Bot (Pure Validator)"; else echo "  ❌ Game Engine Bot - needs build"; fi
     @if [ -f "target/release/integration-runner" ]; then echo "  ✅ Integration Test Runner"; else echo "  ❌ Integration Runner - needs build"; fi
-    @if [ -f "target/release/main" ]; then echo "  ✅ Modularized Integration Test Suite"; else echo "  ❌ Test Suite - needs build"; fi
+    @if [ -f "target/release/gaming-wallet" ]; then echo "  ✅ Gaming Wallet Demo"; else echo "  ❌ Gaming Wallet - needs build"; fi
     @if [ -d "daemons/cdk" ]; then echo "  ✅ CDK (Official Cashu Implementation)"; else echo "  ❌ CDK - needs submodule init"; fi
     @if [ -d "daemons/nostr-relay" ]; then echo "  ✅ Nostr Relay (Submodule)"; else echo "  ❌ Nostr Relay - needs setup"; fi
     @if [ -f "daemons/shared-game-logic/pkg/shared_game_logic.js" ]; then echo "  ✅ WASM Game Logic"; else echo "  ❌ WASM - needs build-wasm"; fi
@@ -260,8 +251,8 @@ claude-help:
     @echo "  just arch            # Architecture overview"
     @echo ""
     @echo "⚡ Quick Development:"
-    @echo "  just integration-player  # Modularized test suite"
     @echo "  just smoke-test      # Quick system verification"
+    @echo "  just integration     # Comprehensive integration test"
     @echo ""
     @echo "📚 The revolutionary gaming system is documented in:"
     @echo "  • CLAUDE.md - Project memory and status"

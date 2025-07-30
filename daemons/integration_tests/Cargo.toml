@@ -3,9 +3,6 @@ name = "integration-tests"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "main"
-path = "main.rs"
 
 
 [[bin]]

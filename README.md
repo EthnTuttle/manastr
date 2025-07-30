@@ -62,15 +62,9 @@ cd daemons/integration_tests
 cargo run --bin integration-runner
 ```
 
-**Alternative: Run individual integration test components:**
+**Or use the convenient justfile command:**
 ```bash
-cd daemons/integration_tests
-
-# Start all services and run player-driven test
-cargo run --bin main
-
-# Or run just the Rust service orchestrator
-cargo run --bin integration-runner
+just integration
 ```
 
 ### 🎯 **What the Integration Tests Prove**

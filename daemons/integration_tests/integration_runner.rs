@@ -17,6 +17,9 @@ use std::time::{Duration, Instant};
 use tokio::time::sleep;
 use tracing::{info, warn};
 
+// Import the comprehensive test suite
+use integration_tests;
+
 /// Service orchestration for integration testing
 pub struct IntegrationRunner {
     services: Vec<Service>,
@@ -293,15 +296,21 @@ impl IntegrationRunner {
         Ok(content.contains(message))
     }
 
-    /// Run the integration test suite
+    /// Run the comprehensive integration test suite
+    /// 
+    /// This runs both service connectivity verification AND complete game logic validation
     pub async fn run_integration_tests(&self) -> Result<()> {
-        info!("🧪 RUST INTEGRATION RUNNER: Starting comprehensive test suite");
+        info!("🧪 COMPREHENSIVE INTEGRATION TEST: Service orchestration + game logic validation");
 
-        // For now, we'll run a simple connectivity test
-        // The full player-driven integration tests can be run separately
+        // Step 1: Verify all services are connected and responding
         self.verify_service_connectivity().await?;
 
-        info!("✅ All integration tests passed successfully!");
+        // Step 2: Run comprehensive player-driven game logic tests
+        info!("🎮 Running comprehensive player-driven game logic validation...");
+        let test_suite = integration_tests::PlayerDrivenTestSuite::new().await?;
+        test_suite.run_comprehensive_tests().await?;
+
+        info!("🎉 ALL INTEGRATION TESTS PASSED: Service orchestration + game logic validation complete!");
         Ok(())
     }
 
