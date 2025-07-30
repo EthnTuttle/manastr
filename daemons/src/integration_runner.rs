@@ -112,7 +112,7 @@ impl IntegrationRunner {
         info!("🪙 Starting CDK Cashu Mint via Rust process management");
         
         let mut child = Command::new("cargo")
-            .args(&["run", "--release", "--bin", "cdk-mintd", "--", "--config", "manastr-config.toml"])
+            .args(&["run", "--release", "--bin", "cdk-mintd", "--", "--config", "../../../config/cashu-mint.toml"])
             .current_dir("cdk/crates/cdk-mintd")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

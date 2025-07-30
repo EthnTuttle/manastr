@@ -16,6 +16,7 @@ manastr/
 │   ├── shared-game-logic/   # ✅ WASM-compatible deterministic game logic
 │   ├── nostr-relay/         # ✅ Decentralized event coordination (strfry)
 │   ├── cdk/                 # ✅ Official CDK submodule with full mint functionality
+│   ├── config/              # ✅ Manastr-specific configurations for all services
 │   └── gaming-wallet/       # ✅ CDK extension for C value access
 └── CLAUDE.md               # 📍 THIS FILE - Memory & status tracking
 ```
