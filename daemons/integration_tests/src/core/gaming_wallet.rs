@@ -16,7 +16,6 @@ use cdk::{
     secret::Secret,
     Amount,
 };
-use cdk_fake_wallet::FakeWallet;
 use nostr::Keys;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -77,9 +76,6 @@ impl GamingToken {
 /// needed for the zero-coordination gaming architecture.
 #[derive(Clone)]
 pub struct GamingWallet {
-    // Underlying CDK wallet for standard operations
-    cdk_wallet: FakeWallet,
-
     // 🚀 REVOLUTIONARY GAMING EXTENSIONS
     gaming_tokens: HashMap<String, GamingToken>, // Track tokens with C values
     mint_url: String,
@@ -91,24 +87,7 @@ pub struct GamingWallet {
 impl GamingWallet {
     /// Create new gaming wallet with CDK integration
     pub fn new(mint_url: String) -> Self {
-        // Initialize with standard CDK FakeWallet configuration
-        let fee_reserve = cdk::types::FeeReserve {
-            min_fee_reserve: 1.into(),
-            percent_fee_reserve: 0.01, // 1% fee
-        };
-        let payment_states = HashMap::new();
-        let fail_payment_check = std::collections::HashSet::new();
-        let payment_delay = 1; // 1 second delay for testing
-
-        let cdk_wallet = FakeWallet::new(
-            fee_reserve,
-            payment_states,
-            fail_payment_check,
-            payment_delay,
-        );
-
         Self {
-            cdk_wallet,
             gaming_tokens: HashMap::new(),
             mint_url,
             token_counter: 0,

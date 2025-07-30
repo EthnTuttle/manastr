@@ -38,6 +38,7 @@ Thumbs.db
 # Daemon-specific
 daemons/*/logs/
 daemons/*/data/
+daemons/integration_tests/logs/
 daemons/nostr-relay/strfry.db*
 daemons/nostr-relay/nostr-relay-db/
 daemons/nostr-relay/strfry/

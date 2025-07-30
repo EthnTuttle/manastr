@@ -31,14 +31,12 @@ struct Service {
     name: String,
     process: Option<Child>,
     health_check: HealthCheck,
-    startup_delay: Duration,
 }
 
 #[derive(Debug)]
 enum HealthCheck {
-    Http { url: String, port: u16 },
+    Http { url: String },
     LogMessage { message: String, log_file: String },
-    Process { pid_check: bool },
 }
 
 impl Default for IntegrationRunner {
@@ -62,9 +60,7 @@ impl IntegrationRunner {
             process: None,
             health_check: HealthCheck::Http {
                 url: "http://127.0.0.1:3333/health".to_string(),
-                port: 3333,
             },
-            startup_delay: Duration::from_secs(2),
         });
         self
     }
@@ -78,7 +74,6 @@ impl IntegrationRunner {
                 message: "Game Engine Bot fully operational".to_string(),
                 log_file: "game-engine.log".to_string(),
             },
-            startup_delay: Duration::from_secs(3),
         });
         self
     }
@@ -90,24 +85,21 @@ impl IntegrationRunner {
             process: None,
             health_check: HealthCheck::Http {
                 url: "http://127.0.0.1:7777".to_string(),
-                port: 7777,
             },
-            startup_delay: Duration::from_secs(2),
         });
         self
     }
 
-    /// Start all services and wait for them to be ready
+    /// Build and start all services
     pub async fn start_all_services(&mut self) -> Result<()> {
-        info!("🏗️ RUST INTEGRATION RUNNER: Starting all services");
+        info!("🏗️ RUST INTEGRATION RUNNER: Building and starting all services");
 
-        // Start Cashu Mint
+        // First, pre-build all services
+        self.build_all_services().await?;
+
+        // Then start them (much faster since they're already built)
         self.start_cashu_mint().await?;
-
-        // Start Game Engine
         self.start_game_engine().await?;
-
-        // Start Nostr Relay
         self.start_nostr_relay().await?;
 
         // Wait for all services to be healthy
@@ -117,22 +109,79 @@ impl IntegrationRunner {
         Ok(())
     }
 
-    async fn start_cashu_mint(&mut self) -> Result<()> {
-        info!("🪙 Starting CDK Cashu Mint via Rust process management");
+    /// Pre-build all services to avoid startup delays
+    async fn build_all_services(&self) -> Result<()> {
+        info!("🔨 Pre-building all services for faster startup...");
 
-        let child = Command::new("cargo")
+        // Build CDK mint
+        info!("  Building CDK Cashu Mint...");
+        let cdk_build = Command::new("cargo")
+            .args(["build", "--release", "--bin", "cdk-mintd"])
+            .current_dir("../cdk/crates/cdk-mintd")
+            .output()
+            .context("Failed to build CDK mint")?;
+
+        if !cdk_build.status.success() {
+            return Err(anyhow::anyhow!(
+                "CDK mint build failed: {}",
+                String::from_utf8_lossy(&cdk_build.stderr)
+            ));
+        }
+
+        // Build game engine
+        info!("  Building Game Engine Bot...");
+        let engine_build = Command::new("cargo")
+            .args(["build", "--release", "--bin", "game-engine-bot"])
+            .current_dir("../game-engine-bot")
+            .output()
+            .context("Failed to build game engine")?;
+
+        if !engine_build.status.success() {
+            return Err(anyhow::anyhow!(
+                "Game engine build failed: {}",
+                String::from_utf8_lossy(&engine_build.stderr)
+            ));
+        }
+
+        // Build nostr relay
+        info!("  Building Nostr Relay...");
+        let relay_build = Command::new("cargo")
+            .args(["build", "--release"])
+            .current_dir("../nostr-relay/nostr-rs-relay")
+            .output()
+            .context("Failed to build nostr relay")?;
+
+        if !relay_build.status.success() {
+            return Err(anyhow::anyhow!(
+                "Nostr relay build failed: {}",
+                String::from_utf8_lossy(&relay_build.stderr)
+            ));
+        }
+
+        info!("✅ All services pre-built successfully");
+        Ok(())
+    }
+
+    async fn start_cashu_mint(&mut self) -> Result<()> {
+        info!("🪙 Starting pre-built CDK Cashu Mint");
+
+        // Create logs directory
+        std::fs::create_dir_all("logs").context("Failed to create logs directory")?;
+
+        // Create log files for stdout and stderr
+        let stdout_log = std::fs::File::create("logs/cdk-mint.out.log")
+            .context("Failed to create CDK mint stdout log file")?;
+        let stderr_log = std::fs::File::create("logs/cdk-mint.err.log")
+            .context("Failed to create CDK mint stderr log file")?;
+
+        let child = Command::new("./target/release/cdk-mintd")
             .args([
-                "run",
-                "--release",
-                "--bin",
-                "cdk-mintd",
-                "--",
                 "--config",
-                "../../config/cdk-mintd-deterministic.toml",
+                "../config/cdk-mintd-deterministic.toml",
             ])
-            .current_dir("cdk/crates/cdk-mintd")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .current_dir("../cdk")
+            .stdout(Stdio::from(stdout_log))
+            .stderr(Stdio::from(stderr_log))
             .spawn()
             .context("Failed to start CDK Cashu Mint")?;
 
@@ -141,18 +190,23 @@ impl IntegrationRunner {
             service.process = Some(child);
         }
 
-        sleep(Duration::from_secs(3)).await; // CDK mint needs more time to initialize
+        sleep(Duration::from_secs(2)).await; // CDK mint startup delay
         Ok(())
     }
 
     async fn start_game_engine(&mut self) -> Result<()> {
-        info!("🎮 Starting Game Engine State Machine via Rust process management");
+        info!("🎮 Starting pre-built Game Engine State Machine");
 
-        let child = Command::new("cargo")
-            .args(["run", "--release", "--bin", "game-engine-bot"])
-            .current_dir("game-engine-bot")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+        // Create log files for game engine
+        let stdout_log = std::fs::File::create("logs/game-engine.out.log")
+            .context("Failed to create game engine stdout log file")?;
+        let stderr_log = std::fs::File::create("logs/game-engine.err.log")
+            .context("Failed to create game engine stderr log file")?;
+
+        let child = Command::new("./target/release/game-engine-bot")
+            .current_dir("../game-engine-bot")
+            .stdout(Stdio::from(stdout_log))
+            .stderr(Stdio::from(stderr_log))
             .spawn()
             .context("Failed to start Game Engine")?;
 
@@ -165,42 +219,30 @@ impl IntegrationRunner {
             service.process = Some(child);
         }
 
-        sleep(Duration::from_secs(3)).await;
+        sleep(Duration::from_secs(1)).await;
         Ok(())
     }
 
     async fn start_nostr_relay(&mut self) -> Result<()> {
-        info!("📡 Starting Nostr Relay via Rust process management");
-
-        // Ensure the nostr-rs-relay binary exists
-        let relay_binary_path = "nostr-relay/nostr-rs-relay/target/release/nostr-rs-relay";
-        if !std::path::Path::new(relay_binary_path).exists() {
-            info!("🔨 Building nostr-rs-relay binary...");
-            let build_result = Command::new("cargo")
-                .args(["build", "--release"])
-                .current_dir("nostr-relay/nostr-rs-relay")
-                .output()
-                .context("Failed to build nostr-rs-relay")?;
-
-            if !build_result.status.success() {
-                return Err(anyhow::anyhow!(
-                    "Failed to build nostr-rs-relay: {}",
-                    String::from_utf8_lossy(&build_result.stderr)
-                ));
-            }
-        }
+        info!("📡 Starting pre-built Nostr Relay");
 
         // Create config directory
-        std::fs::create_dir_all("nostr-relay/logs").context("Failed to create logs directory")?;
-        std::fs::create_dir_all("nostr-relay/nostr-relay-db")
+        std::fs::create_dir_all("../nostr-relay/logs").context("Failed to create logs directory")?;
+        std::fs::create_dir_all("../nostr-relay/nostr-relay-db")
             .context("Failed to create db directory")?;
+
+        // Create log files for nostr relay
+        let stdout_log = std::fs::File::create("logs/nostr-relay.out.log")
+            .context("Failed to create nostr relay stdout log file")?;
+        let stderr_log = std::fs::File::create("logs/nostr-relay.err.log")
+            .context("Failed to create nostr relay stderr log file")?;
 
         // Start the relay directly
         let child = Command::new("./nostr-rs-relay/target/release/nostr-rs-relay")
             .args(["--config", "config.toml"])
-            .current_dir("nostr-relay")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .current_dir("../nostr-relay")
+            .stdout(Stdio::from(stdout_log))
+            .stderr(Stdio::from(stderr_log))
             .spawn()
             .context("Failed to start Nostr Relay")?;
 
@@ -209,7 +251,7 @@ impl IntegrationRunner {
             service.process = Some(child);
         }
 
-        sleep(Duration::from_secs(2)).await;
+        sleep(Duration::from_secs(1)).await;
         Ok(())
     }
 
@@ -221,8 +263,8 @@ impl IntegrationRunner {
     }
 
     async fn wait_for_service_health(&self, service: &Service) -> Result<()> {
-        let max_attempts = 30;
-        let check_interval = Duration::from_secs(2);
+        let max_attempts = 60;  // Increased for CDK mint build time
+        let check_interval = Duration::from_secs(3);
         let start_time = Instant::now();
 
         info!("⏳ Waiting for {} to be ready...", service.name);
@@ -254,11 +296,6 @@ impl IntegrationRunner {
                             attempt, max_attempts, service.name
                         );
                     }
-                }
-                HealthCheck::Process { .. } => {
-                    // Process health checking would go here
-                    info!("✅ {} is ready (process check)", service.name);
-                    return Ok(());
                 }
             }
 
@@ -385,9 +422,12 @@ impl IntegrationRunner {
         }
 
         // Clean up log files
-        let _ = tokio::fs::remove_file("cashu-mint.log").await;
-        let _ = tokio::fs::remove_file("game-engine.log").await;
-        let _ = tokio::fs::remove_file("nostr-relay.log").await;
+        let _ = tokio::fs::remove_file("logs/cdk-mint.out.log").await;
+        let _ = tokio::fs::remove_file("logs/cdk-mint.err.log").await;
+        let _ = tokio::fs::remove_file("logs/game-engine.out.log").await;
+        let _ = tokio::fs::remove_file("logs/game-engine.err.log").await;
+        let _ = tokio::fs::remove_file("logs/nostr-relay.out.log").await;
+        let _ = tokio::fs::remove_file("logs/nostr-relay.err.log").await;
 
         info!("✅ All services stopped and cleaned up");
         Ok(())
