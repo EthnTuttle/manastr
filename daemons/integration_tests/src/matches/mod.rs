@@ -1,6 +1,5 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use chrono::Utc;
 
 /// Represents a match challenge initiated by a player
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -96,4 +95,4 @@ pub struct MeltResult {
     pub paid: bool,
     pub amount: u64,
     pub payment_preimage: Option<String>,
-} 
+}

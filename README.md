@@ -47,23 +47,50 @@
 
 **Result**: Impossible to cheat without detection, no trusted authority required!
 
-## ✅ **INTEGRATION TEST: DEFINITIVE SYSTEM VALIDATION**
+## ✅ **START HERE: INTEGRATION TESTS ARE THE REFERENCE**
 
-**CRITICAL**: The integration test is the **definitive documentation** of how Manastr works. Run this to see the complete system in action:
+**CRITICAL**: The integration tests in `daemons/integration_tests/` are the **definitive documentation** and **canonical reference implementation** of how Manastr works.
+
+### 🚀 **Quick Start - Run the Integration Tests**
 
 ```bash
-just integration  # The authoritative proof the system works
+# 1. Build all services
+just build
+
+# 2. Run the complete integration test suite (THE REFERENCE)
+cd daemons/integration_tests
+cargo run --bin integration-runner
 ```
 
-**What the integration test proves:**
-- ✅ Complete 9-phase player-driven match flow (all 7 Nostr event types)
-- ✅ Optimized economics: 95% player rewards, 5% system fee
-- ✅ Revolutionary architecture: Zero-coordination gaming operational
-- ✅ Cryptographic anti-cheat: Commitment/reveal working in practice
-- ✅ Service orchestration: All 3 services working together
-- ✅ Event chain integrity: Chronological order and references verified
+**Alternative: Run individual integration test components:**
+```bash
+cd daemons/integration_tests
 
-**The integration test IS the system - run it to understand how Manastr works!**
+# Start all services and run player-driven test
+cargo run --bin player-driven-integration-test
+
+# Or run just the Rust service orchestrator
+cargo run --bin integration-runner
+```
+
+### 🎯 **What the Integration Tests Prove**
+
+The `daemons/integration_tests/` directory contains the **complete working system** that demonstrates:
+
+- ✅ **Complete 9-phase player-driven match flow** (all 7 Nostr event types: 31000-31006)
+- ✅ **Real CDK integration** with deterministic Cashu token generation for authentic C values
+- ✅ **Optimized economics**: 95% player rewards, 5% system fee validation
+- ✅ **Revolutionary zero-coordination architecture**: Players control everything
+- ✅ **Cryptographic anti-cheat**: Commitment/reveal working with real SHA256 validation
+- ✅ **Rust-first service orchestration**: No shell scripts, robust process management
+- ✅ **Event chain integrity**: Chronological Nostr event validation
+- ✅ **Concurrent match processing**: Multiple matches handled simultaneously
+
+### 📍 **Integration Tests = Canonical Reference**
+
+**The integration tests ARE the authoritative system specification.** Everything else (docs, code comments) references these tests as the source of truth for how Manastr works.
+
+**🔑 Key Insight**: Start with the integration tests to understand the system, then explore individual components.
 
 ## 🚀 Development Status
 
@@ -80,12 +107,22 @@ just integration  # The authoritative proof the system works
 ```
 manastr/
 ├── daemons/
+│   ├── integration_tests/  # 🎯 THE REFERENCE - Complete system validation
 │   ├── game-engine-bot/    # ✅ Pure validator with anti-cheat
 │   ├── shared-game-logic/  # ✅ WASM-compatible deterministic logic  
 │   ├── nostr-relay/        # ✅ Decentralized event coordination
-│   └── cashu-mint/         # ⏳ Pure CDK dual-currency implementation
+│   └── cdk/                # ✅ Official CDK submodule with full mint functionality
 ├── docs/                   # ✅ Revolutionary architecture specifications
 └── CLAUDE.md              # ✅ Complete breakthrough documentation
 ```
+
+### 🎯 **Start with `daemons/integration_tests/`**
+
+This directory contains:
+- **Complete working system** with all 3 services orchestrated via Rust
+- **Real CDK integration** using official Cashu Development Kit
+- **Player-driven test scenarios** demonstrating the revolutionary architecture
+- **Deterministic token generation** for reproducible C values and army generation
+- **Rust-first service management** following architectural principles
 
 **This represents a fundamental breakthrough in decentralized multiplayer gaming!** 🎯✨

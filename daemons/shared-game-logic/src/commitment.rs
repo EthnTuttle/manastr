@@ -1,5 +1,5 @@
-use sha2::{Sha256, Digest};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use wasm_bindgen::prelude::*;
 
 /// Commitment/Reveal cryptographic functions for player-driven matches
@@ -14,9 +14,9 @@ pub struct Commitment {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CommitmentType {
-    CashuTokens,  // Commitment to Cashu token secrets
-    Army,         // Commitment to generated army
-    Moves,        // Commitment to round moves (positions + abilities)
+    CashuTokens, // Commitment to Cashu token secrets
+    Army,        // Commitment to generated army
+    Moves,       // Commitment to round moves (positions + abilities)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,7 +44,9 @@ pub fn verify_commitment(commitment: &str, revealed_data: &str, nonce: &str) -> 
 pub fn generate_nonce() -> String {
     use rand::Rng;
     let mut rng = rand::thread_rng();
-    (0..32).map(|_| format!("{:02x}", rng.gen::<u8>())).collect()
+    (0..32)
+        .map(|_| format!("{:02x}", rng.gen::<u8>()))
+        .collect()
 }
 
 /// Create commitment to Cashu token secrets
@@ -65,21 +67,13 @@ pub fn commit_to_moves(positions: &[u8], abilities: &[String], nonce: &str) -> S
 }
 
 /// Verify Cashu token commitment
-pub fn verify_cashu_commitment(
-    commitment: &str, 
-    revealed_tokens: &[String], 
-    nonce: &str
-) -> bool {
+pub fn verify_cashu_commitment(commitment: &str, revealed_tokens: &[String], nonce: &str) -> bool {
     let revealed_data = serde_json::to_string(revealed_tokens).unwrap();
     verify_commitment(commitment, &revealed_data, nonce)
 }
 
 /// Verify army commitment
-pub fn verify_army_commitment(
-    commitment: &str,
-    revealed_army: &str,
-    nonce: &str
-) -> bool {
+pub fn verify_army_commitment(commitment: &str, revealed_army: &str, nonce: &str) -> bool {
     verify_commitment(commitment, revealed_army, nonce)
 }
 
@@ -88,7 +82,7 @@ pub fn verify_moves_commitment(
     commitment: &str,
     revealed_positions: &[u8],
     revealed_abilities: &[String],
-    nonce: &str
+    nonce: &str,
 ) -> bool {
     let revealed_data = serde_json::to_string(&(revealed_positions, revealed_abilities)).unwrap();
     verify_commitment(commitment, &revealed_data, nonce)
@@ -125,9 +119,9 @@ pub fn wasm_commit_to_cashu_tokens(token_secrets: JsValue, nonce: &str) -> Strin
 
 #[wasm_bindgen]
 pub fn wasm_verify_cashu_commitment(
-    commitment: &str, 
-    revealed_tokens: JsValue, 
-    nonce: &str
+    commitment: &str,
+    revealed_tokens: JsValue,
+    nonce: &str,
 ) -> bool {
     let tokens: Vec<String> = serde_wasm_bindgen::from_value(revealed_tokens).unwrap();
     verify_cashu_commitment(commitment, &tokens, nonce)
@@ -144,7 +138,7 @@ pub fn wasm_verify_moves_commitment(
     commitment: &str,
     positions: &[u8],
     abilities: JsValue,
-    nonce: &str
+    nonce: &str,
 ) -> bool {
     let abilities_vec: Vec<String> = serde_wasm_bindgen::from_value(abilities).unwrap();
     verify_moves_commitment(commitment, positions, &abilities_vec, nonce)
@@ -158,13 +152,13 @@ mod tests {
     fn test_commitment_verify_cycle() {
         let data = "test_data_12345";
         let nonce = "random_nonce_67890";
-        
-        let commitment = create_commitment(data, &nonce);
-        assert!(verify_commitment(&commitment, data, &nonce));
-        
+
+        let commitment = create_commitment(data, nonce);
+        assert!(verify_commitment(&commitment, data, nonce));
+
         // Verify fails with wrong data
-        assert!(!verify_commitment(&commitment, "wrong_data", &nonce));
-        
+        assert!(!verify_commitment(&commitment, "wrong_data", nonce));
+
         // Verify fails with wrong nonce
         assert!(!verify_commitment(&commitment, data, "wrong_nonce"));
     }
@@ -177,13 +171,17 @@ mod tests {
             "token_secret_3".to_string(),
         ];
         let nonce = "test_nonce";
-        
-        let commitment = commit_to_cashu_tokens(&tokens, &nonce);
-        assert!(verify_cashu_commitment(&commitment, &tokens, &nonce));
-        
+
+        let commitment = commit_to_cashu_tokens(&tokens, nonce);
+        assert!(verify_cashu_commitment(&commitment, &tokens, nonce));
+
         // Verify fails with different tokens
         let different_tokens = vec!["different_token".to_string()];
-        assert!(!verify_cashu_commitment(&commitment, &different_tokens, &nonce));
+        assert!(!verify_cashu_commitment(
+            &commitment,
+            &different_tokens,
+            nonce
+        ));
     }
 
     #[test]
@@ -191,23 +189,33 @@ mod tests {
         let positions = vec![1, 2, 3, 4];
         let abilities = vec!["boost".to_string(), "shield".to_string()];
         let nonce = "moves_nonce";
-        
-        let commitment = commit_to_moves(&positions, &abilities, &nonce);
-        assert!(verify_moves_commitment(&commitment, &positions, &abilities, &nonce));
-        
+
+        let commitment = commit_to_moves(&positions, &abilities, nonce);
+        assert!(verify_moves_commitment(
+            &commitment,
+            &positions,
+            &abilities,
+            nonce
+        ));
+
         // Verify fails with different moves
         let different_positions = vec![5, 6, 7, 8];
-        assert!(!verify_moves_commitment(&commitment, &different_positions, &abilities, &nonce));
+        assert!(!verify_moves_commitment(
+            &commitment,
+            &different_positions,
+            &abilities,
+            nonce
+        ));
     }
 
     #[test]
     fn test_deterministic_hashing() {
         let data = "deterministic_test";
         let nonce = "fixed_nonce";
-        
-        let commitment1 = create_commitment(data, &nonce);
-        let commitment2 = create_commitment(data, &nonce);
-        
+
+        let commitment1 = create_commitment(data, nonce);
+        let commitment2 = create_commitment(data, nonce);
+
         // Same inputs should produce same commitment
         assert_eq!(commitment1, commitment2);
     }
@@ -216,14 +224,14 @@ mod tests {
     fn test_nonce_generation() {
         let nonce1 = generate_nonce();
         let nonce2 = generate_nonce();
-        
+
         // Different nonces should be generated
         assert_ne!(nonce1, nonce2);
-        
+
         // Nonces should be hex strings of expected length (64 chars = 32 bytes * 2)
         assert_eq!(nonce1.len(), 64);
         assert_eq!(nonce2.len(), 64);
-        
+
         // Should be valid hex
         assert!(nonce1.chars().all(|c| c.is_ascii_hexdigit()));
         assert!(nonce2.chars().all(|c| c.is_ascii_hexdigit()));

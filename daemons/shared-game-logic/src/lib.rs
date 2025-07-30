@@ -1,16 +1,18 @@
 use wasm_bindgen::prelude::*;
 
 // Import our modules
-pub mod combat;
-pub mod game_state;
 pub mod abilities;
-pub mod league;
+pub mod combat;
 pub mod commitment;
+pub mod game_state;
+pub mod league;
 
 // Re-export public types
-pub use game_state::{Unit, Ability, RoundResult};
-pub use combat::{generate_units_from_token_secret, generate_army_from_cashu_c_value, process_combat};
+pub use combat::{
+    generate_army_from_cashu_c_value, generate_units_from_token_secret, process_combat,
+};
 pub use commitment::*;
+pub use game_state::{Ability, RoundResult, Unit};
 
 // WASM initialization
 #[wasm_bindgen(start)]
@@ -41,7 +43,7 @@ pub fn wasm_process_combat(
 ) -> JsValue {
     let unit1: Unit = serde_wasm_bindgen::from_value(unit1_js).unwrap();
     let unit2: Unit = serde_wasm_bindgen::from_value(unit2_js).unwrap();
-    
+
     let result = combat::process_combat(unit1, unit2, player1_npub, player2_npub).unwrap();
     serde_wasm_bindgen::to_value(&result).unwrap()
 }

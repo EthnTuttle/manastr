@@ -41,7 +41,7 @@ impl PlayerDrivenTestSuite {
         
         let keys = Keys::generate();
         let nostr_client = NostrClient::new(&keys);
-        nostr_client.add_relay(&relay_url).await?;
+        nostr_client.add_relay(relay_url.clone()).await?;
         nostr_client.connect().await;
         
         Ok(Self {

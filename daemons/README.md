@@ -6,14 +6,16 @@ This directory contains the world's first implementation of **zero-coordination 
 
 ```
 manastr/daemons/
-├── cashu-mint/              # Pure CDK dual-currency mint (mana/loot)
-├── game-engine-bot/         # Pure validation engine (never coordinates)
-├── shared-game-logic/       # Deterministic WASM-compatible game logic
-├── nostr-relay/             # nostr-rs-relay for decentralized events
-├── test-keys.toml          # Deterministic keys for reproducible testing
-├── run-player-driven-tests.sh # Revolutionary architecture test suite
-└── logs/                   # Daemon output logs (created during testing)
+├── cdk/                    # Official CDK submodule for authentic Cashu operations
+├── game-engine-bot/        # Pure validation engine (never coordinates)
+├── shared-game-logic/      # Deterministic WASM-compatible game logic
+├── nostr-relay/            # nostr-rs-relay for decentralized events
+├── config/                 # Service configurations including CDK mint setup
+├── web-client/             # React/TypeScript web client
+└── economic_model.rs       # Optimized economic model (95% player rewards)
 ```
+
+**🚨 IMPORTANT:** Integration tests have been moved to a separate repository for better CI/CD management.
 
 ## 🎮 Revolutionary Services
 

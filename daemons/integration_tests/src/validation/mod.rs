@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Summary of match validation results
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -8,6 +8,12 @@ pub struct ValidationSummary {
     pub signatures_valid: bool,
     pub winner_confirmed: bool,
     pub match_integrity_score: u8,
+}
+
+impl Default for ValidationSummary {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ValidationSummary {
@@ -35,10 +41,10 @@ impl ValidationSummary {
 
     /// Checks if the match validation was completely successful
     pub fn is_valid(&self) -> bool {
-        self.commitments_valid && 
-        self.combat_verified && 
-        self.signatures_valid && 
-        self.winner_confirmed && 
-        self.match_integrity_score >= 100
+        self.commitments_valid
+            && self.combat_verified
+            && self.signatures_valid
+            && self.winner_confirmed
+            && self.match_integrity_score >= 100
     }
-} 
+}

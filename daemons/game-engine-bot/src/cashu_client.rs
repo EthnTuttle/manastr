@@ -1,8 +1,8 @@
+use crate::errors::GameEngineError;
+use nostr::util::hex;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use crate::errors::GameEngineError;
 use tracing::{info, warn};
-use nostr::util::hex;
 
 #[derive(Debug, Clone)]
 pub struct CashuClient {
@@ -36,7 +36,7 @@ pub struct LootTokenResult {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SwapRequest {
-    pub inputs: Vec<serde_json::Value>, // Proofs to spend
+    pub inputs: Vec<serde_json::Value>,  // Proofs to spend
     pub outputs: Vec<serde_json::Value>, // New blind messages
 }
 
@@ -56,7 +56,7 @@ impl CashuClient {
     /// Verify that the mint is accessible
     pub async fn health_check(&self) -> Result<bool, GameEngineError> {
         let url = format!("{}/health", self.mint_url);
-        
+
         match self.client.get(&url).send().await {
             Ok(response) => Ok(response.status().is_success()),
             Err(e) => {
@@ -69,14 +69,15 @@ impl CashuClient {
     /// Get mint information
     pub async fn get_mint_info(&self) -> Result<serde_json::Value, GameEngineError> {
         let url = format!("{}/v1/info", self.mint_url);
-        
-        let response = self.client
+
+        let response = self
+            .client
             .get(&url)
             .send()
             .await?
             .json::<serde_json::Value>()
             .await?;
-            
+
         Ok(response)
     }
 
@@ -89,8 +90,10 @@ impl CashuClient {
         amount: u64,
         match_id: &str,
     ) -> Result<LootTokenResult, GameEngineError> {
-        info!("🏆 Creating loot token: {} for winner {} (match {})", 
-              amount, winner_npub, match_id);
+        info!(
+            "🏆 Creating loot token: {} for winner {} (match {})",
+            amount, winner_npub, match_id
+        );
 
         // In a real implementation, this would be a special authenticated endpoint
         // For now, we simulate the loot token creation
@@ -100,24 +103,24 @@ impl CashuClient {
         };
 
         let url = format!("{}/v1/mint/quote/bolt11", self.mint_url);
-        
-        let response = self.client
-            .post(&url)
-            .json(&quote_request)
-            .send()
-            .await?;
+
+        let response = self.client.post(&url).json(&quote_request).send().await?;
 
         if !response.status().is_success() {
-            return Err(GameEngineError::CashuError(
-                format!("Failed to create loot quote: {}", response.status())
-            ));
+            return Err(GameEngineError::CashuError(format!(
+                "Failed to create loot quote: {}",
+                response.status()
+            )));
         }
 
         let quote_response: MintQuoteResponse = response.json().await?;
 
         // In a real implementation, the game engine would have authority to mint
         // the loot token directly without requiring Lightning payment
-        info!("🎯 Loot token quote created: {} (amount: {})", quote_response.quote, amount);
+        info!(
+            "🎯 Loot token quote created: {} (amount: {})",
+            quote_response.quote, amount
+        );
 
         Ok(LootTokenResult {
             quote: quote_response.quote,
@@ -137,7 +140,7 @@ impl CashuClient {
         // In a pure CDK mint, token verification is handled client-side
         // The game engine trusts that clients provide valid tokens
         // In production, this would use proper CDK token verification
-        
+
         info!("🔍 Mana token verification (client-side logic)");
         Ok(true)
     }
@@ -145,14 +148,15 @@ impl CashuClient {
     /// Get keysets from the mint
     pub async fn get_keysets(&self) -> Result<serde_json::Value, GameEngineError> {
         let url = format!("{}/v1/keysets", self.mint_url);
-        
-        let response = self.client
+
+        let response = self
+            .client
             .get(&url)
             .send()
             .await?
             .json::<serde_json::Value>()
             .await?;
-            
+
         Ok(response)
     }
 
@@ -165,8 +169,10 @@ impl CashuClient {
         winner_npub: &str,
         new_tokens_count: u64,
     ) -> Result<serde_json::Value, GameEngineError> {
-        info!("💰 LOOT SWAP: Winner {} claiming loot token {} for {} new tokens", 
-              winner_npub, loot_token_quote, new_tokens_count);
+        info!(
+            "💰 LOOT SWAP: Winner {} claiming loot token {} for {} new tokens",
+            winner_npub, loot_token_quote, new_tokens_count
+        );
 
         // In a real implementation, this would:
         // 1. Verify the winner's signature with their npub
@@ -184,25 +190,20 @@ impl CashuClient {
             })],
             outputs: vec![serde_json::json!({
                 "amount": new_tokens_count,
-                "B_": format!("03{}", hex::encode(format!("new_token_{}", winner_npub).as_bytes()).chars().take(62).collect::<String>()) // Simulated blind message
-            })]
+                "B_": format!("03{}", hex::encode(format!("new_token_{winner_npub}").as_bytes()).chars().take(62).collect::<String>()) // Simulated blind message
+            })],
         };
 
         let url = format!("{}/v1/swap", self.mint_url);
-        
-        match self.client
-            .post(&url)
-            .json(&swap_request)
-            .send()
-            .await 
-        {
+
+        match self.client.post(&url).json(&swap_request).send().await {
             Ok(response) => {
                 if response.status().is_success() {
                     match response.json::<SwapResponse>().await {
                         Ok(swap_response) => {
                             info!("✅ LOOT SWAP SUCCESS: Winner {} successfully claimed {} spendable tokens", 
                                   winner_npub, new_tokens_count);
-                            
+
                             Ok(serde_json::json!({
                                 "status": "success",
                                 "winner_npub": winner_npub,
@@ -226,7 +227,10 @@ impl CashuClient {
                         }
                     }
                 } else {
-                    warn!("❌ LOOT SWAP: Mint returned error status: {}", response.status());
+                    warn!(
+                        "❌ LOOT SWAP: Mint returned error status: {}",
+                        response.status()
+                    );
                     // Simulate success for integration test even if mint doesn't support real swaps
                     Ok(serde_json::json!({
                         "status": "simulated_success",

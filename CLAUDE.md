@@ -17,7 +17,8 @@ manastr/
 │   ├── nostr-relay/         # ✅ Decentralized event coordination (strfry)
 │   ├── cdk/                 # ✅ Official CDK submodule with full mint functionality
 │   ├── config/              # ✅ Manastr-specific configurations for all services
-│   └── gaming-wallet/       # ✅ CDK extension for C value access
+│   ├── gaming-wallet/       # ✅ CDK extension for C value access
+│   └── integration_tests/   # ✅ Complete - Consolidated integration test suite
 └── CLAUDE.md               # 📍 THIS FILE - Memory & status tracking
 ```
 
@@ -28,6 +29,9 @@ just integration    # Run complete system integration test (THE REFERENCE)
 just dev            # Full development workflow (build + test + check)
 just --list         # Show all available commands
 ```
+
+**📍 INTEGRATION TESTING:**
+Integration tests are consolidated in `daemons/integration_tests/` directory for comprehensive system validation.
 
 ## Revolutionary Architecture Status ✅
 
@@ -51,8 +55,8 @@ just --list         # Show all available commands
 | **Rust-First Architecture** | ✅ Complete | Service orchestration via Rust, not shell scripts |
 | **Mint Authorization** | ✅ Complete | Hot-swappable game engine authorization |
 
-### 🎯 **THE INTEGRATION TEST IS THE REFERENCE**
-**CRITICAL**: Run `just integration` to see the complete system in action. The integration test is the **definitive documentation** proving the revolutionary zero-coordination gaming architecture works.
+### 🎯 **CONSOLIDATED INTEGRATION TESTING**
+**CRITICAL**: Integration tests are located in `daemons/integration_tests/` directory for consolidated testing. The integration test suite is the **definitive documentation** proving the revolutionary zero-coordination gaming architecture works.
 
 ## Core Architectural Principles
 
@@ -207,23 +211,20 @@ This principle ensures integration tests validate the complete production system
 
 **This is not just a game - it's a new paradigm for decentralized multiplayer gaming that could revolutionize the industry.**
 
-## Integration Test as Living Documentation
+## Integration Tests (Separate Repository)
 
-**The integration test (`just integration`) demonstrates:**
+**🏗️ MOVED TO SEPARATE REPO:** Integration tests are now maintained independently and demonstrate:
 1. **Complete 9-Phase Player-Driven Match Flow** - All 7 Nostr event types
 2. **Optimized Economics** - 95% player rewards validated
 3. **Revolutionary Architecture** - Zero-coordination gaming operational
 4. **Cryptographic Security** - Anti-cheat working in real scenarios
 5. **Service Orchestration** - All services coordinated via Rust
+6. **Real CDK Integration** - Authentic Cashu token C values for deterministic army generation
 
-**Integration Test Log Proof:**
-```
-✅ All expected events found on relay
-✅ Event chain integrity verified  
-✅ Revolutionary architecture validated: Zero-coordination gaming operational!
-✅ Optimized economics: 95% player reward confirmed
-✅ Game Engine State Machine operational
-```
+**Benefits of Separate Repository:**
+- **Better CI/CD**: Independent testing pipeline
+- **Modular Development**: Core services and tests can evolve independently
+- **Cleaner Architecture**: Separation of concerns between implementation and validation
 
 ---
 

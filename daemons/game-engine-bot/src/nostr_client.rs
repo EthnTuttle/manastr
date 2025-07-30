@@ -1,7 +1,6 @@
 use anyhow::Result;
-use nostr::{Event, EventBuilder, Keys, Kind, Tag, TagKind};
+use nostr::{Event, Keys};
 use nostr_sdk::{Client, RelayPoolNotification};
-use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, warn};
 
@@ -35,7 +34,7 @@ impl NostrClient {
     ) -> Result<Self, GameEngineError> {
         // Parse private key
         let keys = Keys::parse(&config.private_key)
-            .map_err(|e| GameEngineError::NostrError(format!("Invalid private key: {}", e)))?;
+            .map_err(|e| GameEngineError::NostrError(format!("Invalid private key: {e}")))?;
 
         let client = Client::new(&keys);
 
@@ -43,7 +42,7 @@ impl NostrClient {
         client
             .add_relay(&config.relay_url)
             .await
-            .map_err(|e| GameEngineError::NostrError(format!("Failed to add relay: {}", e)))?;
+            .map_err(|e| GameEngineError::NostrError(format!("Failed to add relay: {e}")))?;
 
         client.connect().await;
 
@@ -62,25 +61,25 @@ impl NostrClient {
         // OPTIMIZED FILTERING: Only process game-related Nostr events (KIND 31000-31005)
         // This prevents wasting computational resources on non-game events
         let since_timestamp = nostr::Timestamp::now() - 3600; // 1 hour ago for integration testing
-        
+
         // Single efficient filter for all game event types
         let game_events_filter = nostr::Filter::new()
             .kinds(vec![
-                KIND_MATCH_CHALLENGE,    // 31000 - Player creates match
-                KIND_MATCH_ACCEPTANCE,   // 31001 - Player accepts challenge  
-                KIND_TOKEN_REVEAL,       // 31002 - Player reveals Cashu tokens
-                KIND_MOVE_COMMITMENT,    // 31003 - Player commits to round moves
-                KIND_MOVE_REVEAL,        // 31004 - Player reveals actual moves
-                KIND_MATCH_RESULT,       // 31005 - Player submits final match state
-                // NOTE: KIND_LOOT_DISTRIBUTION (31006) excluded - game engine publishes this
+                KIND_MATCH_CHALLENGE,  // 31000 - Player creates match
+                KIND_MATCH_ACCEPTANCE, // 31001 - Player accepts challenge
+                KIND_TOKEN_REVEAL,     // 31002 - Player reveals Cashu tokens
+                KIND_MOVE_COMMITMENT,  // 31003 - Player commits to round moves
+                KIND_MOVE_REVEAL,      // 31004 - Player reveals actual moves
+                KIND_MATCH_RESULT,     // 31005 - Player submits final match state
+                                       // NOTE: KIND_LOOT_DISTRIBUTION (31006) excluded - game engine publishes this
             ])
             .since(since_timestamp);
 
-        let subscription_id = self
+        let _subscription_id = self
             .client
             .subscribe(vec![game_events_filter], None)
             .await
-            .map_err(|e| GameEngineError::NostrError(format!("Failed to subscribe: {}", e)))?;
+            .map_err(|e| GameEngineError::NostrError(format!("Failed to subscribe: {e}")))?;
 
         info!("📡 🎯 OPTIMIZED FILTERING: Subscribed to game events only (KIND 31000-31005)");
 
@@ -110,15 +109,17 @@ impl NostrClient {
             match notification {
                 RelayPoolNotification::Event { event, .. } => {
                     processed_events += 1;
-                    
+
                     // Only game events (KIND 31000-31005) should reach here due to subscription filter
-                    debug!("📥 Game event received: kind={}, id={}, from={}", 
-                          event.kind, event.id, event.pubkey);
-                    
+                    debug!(
+                        "📥 Game event received: kind={}, id={}, from={}",
+                        event.kind, event.id, event.pubkey
+                    );
+
                     if let Err(e) = self.handle_event(&event).await {
                         error!("Failed to handle event {}: {}", event.id, e);
                     }
-                    
+
                     // Periodic efficiency logging
                     if processed_events % 100 == 0 {
                         info!("📊 Processed {} game events (filtered subscription working efficiently)", processed_events);
@@ -128,7 +129,10 @@ impl NostrClient {
                     debug!("Relay message: {:?}", message);
                 }
                 RelayPoolNotification::Shutdown => {
-                    warn!("Relay connection shutdown after processing {} game events", processed_events);
+                    warn!(
+                        "Relay connection shutdown after processing {} game events",
+                        processed_events
+                    );
                     break;
                 }
                 _ => {
@@ -136,58 +140,78 @@ impl NostrClient {
                 }
             }
         }
-        warn!("🔍 Exited Nostr notification processing loop after {} game events", processed_events);
+        warn!(
+            "🔍 Exited Nostr notification processing loop after {} game events",
+            processed_events
+        );
     }
 
     /// Handle incoming player-driven match events
     async fn handle_event(&self, event: &Event) -> Result<(), GameEngineError> {
         // OPTIMIZED: Game engine only processes game events (31000-31005)
         // All other events are filtered out at subscription level for efficiency
-        debug!("🎮 Processing game event: {} from {}", event.kind, event.pubkey);
+        debug!(
+            "🎮 Processing game event: {} from {}",
+            event.kind, event.pubkey
+        );
 
         // Parse event based on kind - only game events should reach here due to subscription filter
         let player_event = match event.kind {
             kind if kind == KIND_MATCH_CHALLENGE => {
-                let challenge: MatchChallenge = serde_json::from_str(&event.content)
-                    .map_err(|e| GameEngineError::NostrError(format!("Failed to parse challenge: {}", e)))?;
+                let challenge: MatchChallenge =
+                    serde_json::from_str(&event.content).map_err(|e| {
+                        GameEngineError::NostrError(format!("Failed to parse challenge: {e}"))
+                    })?;
                 PlayerMatchEvent::Challenge(challenge)
             }
             kind if kind == KIND_MATCH_ACCEPTANCE => {
-                let acceptance: MatchAcceptance = serde_json::from_str(&event.content)
-                    .map_err(|e| GameEngineError::NostrError(format!("Failed to parse acceptance: {}", e)))?;
+                let acceptance: MatchAcceptance =
+                    serde_json::from_str(&event.content).map_err(|e| {
+                        GameEngineError::NostrError(format!("Failed to parse acceptance: {e}"))
+                    })?;
                 PlayerMatchEvent::Acceptance(acceptance)
             }
             kind if kind == KIND_TOKEN_REVEAL => {
-                let reveal: TokenReveal = serde_json::from_str(&event.content)
-                    .map_err(|e| GameEngineError::NostrError(format!("Failed to parse token reveal: {}", e)))?;
+                let reveal: TokenReveal = serde_json::from_str(&event.content).map_err(|e| {
+                    GameEngineError::NostrError(format!("Failed to parse token reveal: {e}"))
+                })?;
                 PlayerMatchEvent::TokenReveal(reveal)
             }
             kind if kind == KIND_MOVE_COMMITMENT => {
-                let commitment: MoveCommitment = serde_json::from_str(&event.content)
-                    .map_err(|e| GameEngineError::NostrError(format!("Failed to parse move commitment: {}", e)))?;
+                let commitment: MoveCommitment =
+                    serde_json::from_str(&event.content).map_err(|e| {
+                        GameEngineError::NostrError(format!(
+                            "Failed to parse move commitment: {e}"
+                        ))
+                    })?;
                 PlayerMatchEvent::MoveCommitment(commitment)
             }
             kind if kind == KIND_MOVE_REVEAL => {
-                let reveal: MoveReveal = serde_json::from_str(&event.content)
-                    .map_err(|e| GameEngineError::NostrError(format!("Failed to parse move reveal: {}", e)))?;
+                let reveal: MoveReveal = serde_json::from_str(&event.content).map_err(|e| {
+                    GameEngineError::NostrError(format!("Failed to parse move reveal: {e}"))
+                })?;
                 PlayerMatchEvent::MoveReveal(reveal)
             }
             kind if kind == KIND_MATCH_RESULT => {
-                let result: MatchResult = serde_json::from_str(&event.content)
-                    .map_err(|e| GameEngineError::NostrError(format!("Failed to parse match result: {}", e)))?;
+                let result: MatchResult = serde_json::from_str(&event.content).map_err(|e| {
+                    GameEngineError::NostrError(format!("Failed to parse match result: {e}"))
+                })?;
                 PlayerMatchEvent::MatchResult(result)
             }
             _ => {
                 // This should never happen due to subscription filtering, but log for debugging
-                warn!("⚠️ Unexpected event kind received: {} (subscription filter may need update)", event.kind);
+                warn!(
+                    "⚠️ Unexpected event kind received: {} (subscription filter may need update)",
+                    event.kind
+                );
                 return Ok(());
             }
         };
 
         // Send to game engine for processing
-        self.match_event_sender
-            .send(player_event)
-            .map_err(|e| GameEngineError::NostrError(format!("Failed to send match event: {}", e)))?;
+        self.match_event_sender.send(player_event).map_err(|e| {
+            GameEngineError::NostrError(format!("Failed to send match event: {e}"))
+        })?;
 
         Ok(())
     }
@@ -200,18 +224,21 @@ impl NostrClient {
     ) -> Result<(), GameEngineError> {
         let event = loot_distribution
             .to_nostr_event(&self.keys, match_event_id)
-            .map_err(|e| GameEngineError::NostrError(format!("Failed to create loot event: {}", e)))?;
+            .map_err(|e| {
+                GameEngineError::NostrError(format!("Failed to create loot event: {e}"))
+            })?;
 
-        self.client
-            .send_event(event)
-            .await
-            .map_err(|e| GameEngineError::NostrError(format!("Failed to send loot event: {}", e)))?;
+        self.client.send_event(event).await.map_err(|e| {
+            GameEngineError::NostrError(format!("Failed to send loot event: {e}"))
+        })?;
 
-        info!("🏆 Published loot distribution for match {}", loot_distribution.match_event_id);
+        info!(
+            "🏆 Published loot distribution for match {}",
+            loot_distribution.match_event_id
+        );
 
         Ok(())
     }
-
 
     /// Get the bot's public key
     pub fn public_key(&self) -> String {

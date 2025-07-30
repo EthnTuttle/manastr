@@ -1,6 +1,6 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use anyhow::Result;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameEngineConfig {
@@ -62,7 +62,7 @@ impl Default for GameEngineConfig {
 impl GameEngineConfig {
     pub fn load() -> Result<Self> {
         let config_path = "game-engine.toml";
-        
+
         if !std::path::Path::new(config_path).exists() {
             // Create default config file
             let default_config = Self::default();
@@ -70,10 +70,10 @@ impl GameEngineConfig {
             fs::write(config_path, toml_string)?;
             tracing::info!("📋 Created default {} configuration file", config_path);
         }
-        
+
         let config_str = fs::read_to_string(config_path)?;
         let config: Self = toml::from_str(&config_str)?;
-        
+
         Ok(config)
     }
 }

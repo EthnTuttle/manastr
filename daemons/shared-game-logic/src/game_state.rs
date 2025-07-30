@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
 
 /// A battle unit with stats and special ability
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
@@ -15,9 +14,9 @@ pub struct Unit {
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum Ability {
     None,
-    Boost,    // Double attack this round
-    Shield,   // Negate damage this round
-    Heal,     // Restore 50% max health post-combat
+    Boost,  // Double attack this round
+    Shield, // Negate damage this round
+    Heal,   // Restore 50% max health post-combat
 }
 
 /// Result of a combat round between two units
@@ -41,9 +40,9 @@ pub enum GameLogicError {
 impl std::fmt::Display for GameLogicError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GameLogicError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
-            GameLogicError::CombatError(msg) => write!(f, "Combat error: {}", msg),
-            GameLogicError::SerializationError(msg) => write!(f, "Serialization error: {}", msg),
+            GameLogicError::InvalidInput(msg) => write!(f, "Invalid input: {msg}"),
+            GameLogicError::CombatError(msg) => write!(f, "Combat error: {msg}"),
+            GameLogicError::SerializationError(msg) => write!(f, "Serialization error: {msg}"),
         }
     }
 }
