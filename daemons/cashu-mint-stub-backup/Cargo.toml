@@ -33,6 +33,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Cryptography (CDK handles most of this)
 secp256k1 = "0.28"
+sha2 = "0.10"
 async-trait = "0.1"
 
 # Nostr for game engine authentication

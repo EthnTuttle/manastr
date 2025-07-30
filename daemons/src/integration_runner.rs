@@ -109,22 +109,22 @@ impl IntegrationRunner {
     }
 
     async fn start_cashu_mint(&mut self) -> Result<()> {
-        info!("🪙 Starting Cashu Mint via Rust process management");
+        info!("🪙 Starting CDK Cashu Mint via Rust process management");
         
         let mut child = Command::new("cargo")
-            .args(&["run", "--release", "--bin", "cashu-mint"])
-            .current_dir("cashu-mint")
+            .args(&["run", "--release", "--bin", "cdk-mintd", "--", "--config", "manastr-config.toml"])
+            .current_dir("cdk/crates/cdk-mintd")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
-            .context("Failed to start Cashu Mint")?;
+            .context("Failed to start CDK Cashu Mint")?;
 
         // Store process handle
         if let Some(service) = self.services.iter_mut().find(|s| s.name == "Cashu Mint") {
             service.process = Some(child);
         }
 
-        sleep(Duration::from_secs(2)).await;
+        sleep(Duration::from_secs(3)).await; // CDK mint needs more time to initialize
         Ok(())
     }
 

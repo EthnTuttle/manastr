@@ -1,0 +1,26 @@
+# Rust Analyzer configuration for Manastr workspace
+[rust-analyzer]
+# Enable all features for better analysis
+cargo.features = "all"
+cargo.buildScripts.enable = true
+cargo.runBuildScripts = true
+cargo.detectTargetDir = true
+
+# Enable proc macros for better analysis
+procMacro.enable = true
+
+# Enable all lenses for better code navigation
+lens.enable = true
+lens.implementations.enable = true
+lens.references.enable = true
+lens.references.adt.enable = true
+lens.references.trait.enable = true
+lens.references.enumVariant.enable = true
+lens.references.method.enable = true
+
+# Enable all diagnostics
+diagnostics.disabled = []
+
+# Check on save with clippy
+checkOnSave.command = "clippy"
+checkOnSave.extraArgs = ["--", "-W", "clippy::all"] 

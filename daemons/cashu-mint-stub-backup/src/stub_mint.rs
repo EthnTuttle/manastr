@@ -11,6 +11,8 @@ use tower::ServiceBuilder;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::info;
 use uuid::Uuid;
+use sha2::{Sha256, Digest};
+use nostr::Keys;
 
 use crate::errors::MintError;
 
@@ -141,6 +143,27 @@ impl StubMintState {
             quotes: HashMap::new(),
         }
     }
+}
+
+/// Generate deterministic signature from blinded message for gaming wallet testing
+/// This simulates what a real Cashu mint would do with actual cryptographic signatures
+fn generate_deterministic_signature(blinded_message: &str, amount: u64, mint_master_key: &str) -> String {
+    // Create deterministic seed combining all inputs
+    let seed = format!("mint_signature_{}_{}_{}_{}", mint_master_key, blinded_message, amount, "manastr_v1");
+    
+    // Generate deterministic hash 
+    let mut hasher = Sha256::new();
+    hasher.update(seed.as_bytes());
+    let hash = hasher.finalize();
+    
+    // Create deterministic Nostr-style keys from hash (both use secp256k1)
+    let keys = Keys::parse(&format!("{:0>64}", hex::encode(hash)))
+        .unwrap_or_else(|_| Keys::generate());
+    
+    // Return compressed public key as signature (this simulates the C value)
+    // In real Cashu: C = (r + sk) * G where sk is mint private key, r is random factor
+    // For testing: we use deterministic key derivation to get predictable C values
+    format!("02{}", keys.public_key().to_hex())
 }
 
 pub fn create_stub_mint_router() -> Router {
@@ -286,17 +309,30 @@ async fn mint_bolt11(
     State(state): State<SharedStubState>,
     Json(req): Json<MintRequest>,
 ) -> Result<Json<MintResponse>, MintError> {
-    info!("🔨 Minting tokens for quote: {}", req.quote);
+    info!("🔨 Minting tokens for quote: {} with {} outputs", req.quote, req.outputs.len());
     
-    // Simulate minting process
+    // Use deterministic mint master key for testing
+    let mint_master_key = "manastr_test_mint_master_key_v1";
+    
+    // Generate deterministic signatures based on blinded messages
     let mut signatures = Vec::new();
     for output in req.outputs {
+        let deterministic_signature = generate_deterministic_signature(
+            &output.b_, 
+            output.amount, 
+            mint_master_key
+        );
+        
         let signature = MintSignature {
             amount: output.amount,
-            c_: format!("stub_signature_{}", Uuid::new_v4()),
-            id: "test_keyset_id".to_string(),
+            c_: deterministic_signature,
+            id: "manastr_test_keyset_v1".to_string(),
         };
         signatures.push(signature);
+        
+        info!("🎯 Generated deterministic signature for b_='{}' -> c_='{}'", 
+              &output.b_[..20.min(output.b_.len())], 
+              &signature.c_[..20.min(signature.c_.len())]);
     }
 
     // Update quote state
