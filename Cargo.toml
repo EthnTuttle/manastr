@@ -1,10 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-    "daemons",
-    "daemons/integration_tests",
     "daemons/shared-game-logic",
     "daemons/game-engine-bot",
+    "daemons/integration_tests",
 ]
 
 # Exclude external dependencies and submodules
