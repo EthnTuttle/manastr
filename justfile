@@ -227,6 +227,28 @@ arch:
     @echo "🚀 This architecture represents a fundamental breakthrough in"
     @echo "   multiplayer gaming, eliminating trusted game servers!"
 
+# Exit the matrix - Neo's awakening to zero-coordination gaming
+exit-matrix:
+    @echo "💊 EJECTING NEO FROM THE MATRIX"
+    @echo "==============================="
+    @echo ""
+    @echo "🎮 Welcome to the Matrix of Revolutionary Gaming Architecture"
+    @echo ""
+    @echo "This interactive TUI tutorial walks you through the complete 9-phase"
+    @echo "zero-coordination match flow that represents a paradigm shift in"
+    @echo "multiplayer gaming - from trusted servers to pure cryptographic validation."
+    @echo ""
+    @echo "🔍 What you'll discover:"
+    @echo "  • How players control everything via Nostr events"
+    @echo "  • Cashu C values providing tamper-proof randomness"
+    @echo "  • Cryptographic commitment/reveal preventing all cheating"
+    @echo "  • Game Engine as pure validator (cannot manipulate outcomes)"
+    @echo "  • Complete decentralization without trusted authorities"
+    @echo ""
+    @echo "💊 Take the red pill and see how deep the rabbit hole goes..."
+    @echo ""
+    cd daemons/integration_tests && cargo run --bin integration-runner -- --tutorial
+
 # Help for Claude Code users
 claude-help:
     @echo "🤖 CLAUDE CODE INTEGRATION GUIDE"
@@ -245,6 +267,9 @@ claude-help:
     @echo "  just integration     # Full system integration test"
     @echo "  just smoke-test      # Quick system verification"
     @echo ""
+    @echo "🎓 Learning:"
+    @echo "  just exit-matrix     # Neo's awakening - Interactive TUI tutorial + gameplay client"
+    @echo ""
     @echo "🔧 Utilities:"
     @echo "  just clean           # Remove build artifacts"
     @echo "  just status          # Show system status"
@@ -260,4 +285,4 @@ claude-help:
     @echo "  • daemons/integration_tests/src/core/gaming_wallet.rs - CDK extension"
     @echo "  • README.md - Getting started guide"
     @echo ""
-    @echo "🎯 For Claude Code users: Run 'just demo' to see the breakthrough!"
+    @echo "🎯 For Claude Code users: Run 'just exit-matrix' to experience the revolution!"
