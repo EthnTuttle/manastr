@@ -4,14 +4,14 @@
 
 ```mermaid
 sequenceDiagram
-    box rgb(139,69,255) "🎮 Players" P1, P2, NR
+    box rgb(0,0,255) "🎮 Players" P1, P2, NR
         participant P1 as 👤 Alice (Player 1)
         participant P2 as 👤 Bob (Player 2)
     end
-    box rgb(0,0,255) "comms" NR
+    box rgb(139,69,255) "comms" NR
         participant NR as 📡 Nostr Relay
     end
-    box rgb(255,153,0) "game authority" GE, CDK
+    box rgb(211, 126, 0) "game authority" GE, CDK
         participant GE as 🎮 Game Engine
         participant CDK as 🏦 Cashu Mint
     end
@@ -19,13 +19,7 @@ sequenceDiagram
     Note over P1,CDK: 🚀 PHASE 0: Acquire Mana
     P1->>CDK: Request mana tokens for match entry
     CDK->>P1: Mana rewarded
-    note over P1: (x, C) are the proof part of a mana token
-    note over P1: The player cannot predetermine this value
-    note over P1: The blinding is an authorative source of 
-    note over P1: randomness where neither mint nore player
-    note over P1: are able to have a bias. C will be important.
-    note over P1: We also have determinism so can easily have 
-    note over P1: deterministic testing. 
+    note over P1: (x, C) are the proof part of a mana token<br/>The player cannot predetermine this value.<br/>The blinding is an authorative source of randomness<br/> where neither mint nore player are able to have a bias.<br/>C will be important. We also have determinism<br/> so can easily have deterministic testing. 
     P1->>P1: Unblind mana to resolve C (paired to user generated x)
     Note over P1,CDK: 🚀 PHASE 1: Pick an Army
     P1->>P1: Pick an army
