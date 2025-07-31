@@ -32,5 +32,9 @@ hex = { workspace = true }
 cdk = { workspace = true }
 cdk-fake-wallet = { workspace = true }
 
+# TUI dependencies for tutorial mode
+ratatui = "0.28"
+crossterm = "0.28"
+
 # Local dependencies
 shared-game-logic = { path = "../shared-game-logic" } 
