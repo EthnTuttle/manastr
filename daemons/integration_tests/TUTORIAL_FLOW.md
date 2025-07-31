@@ -123,6 +123,7 @@ sequenceDiagram
     
     Note over P1,P2: 💰 PHASE 9: Loot Distribution
     Note over GE: 🏦 Game Engine burns mana tokens<br/>🎁 Mints new loot tokens for winner<br/>📡 Publishes authoritative result
+    Note over GE,CDK: If the Game Engine and Mint are separate,<br/> they can utilize NOSTR<br/>for comms. Only the Game Engine<br/> should melt Mana to crate Loot.<br/> Ratios of Mana/Loot determine game economics<br/>Mana cannot be swapped.<br/>Loot can be swapped and melted to LN.
     GE->>CDK: Burn Alice's tokens
     GE->>CDK: Burn Bob's tokens
     GE->>CDK: Mint loot tokens for Alice (winner)
@@ -164,49 +165,92 @@ sequenceDiagram
 - **Cryptographic Security**: Mathematics prevents all cheating
 - **Economic Transparency**: Open source loot distribution model
 
-## Tutorial Mode TUI Design
+## Tutorial Mode Usage Instructions
 
-### 📱 **Main HUD Layout**
+### 🚀 **Running the Tutorial**
+
+```bash
+# Navigate to integration tests directory
+cd /home/ethan/code/manastr/daemons/integration_tests
+
+# Run the interactive tutorial mode
+cargo run --bin integration-runner -- --tutorial
+
+# Alternative: Run with debug logging
+cargo run --bin integration-runner -- --debug
+
+# Default: Run integration tests with minimal output
+cargo run --bin integration-runner
+```
+
+### 📱 **Tutorial TUI Interface**
+
+The tutorial mode provides an interactive terminal user interface (TUI) built with ratatui that walks you through the complete 9-phase zero-coordination match flow:
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 🎮 Manastr Tutorial Mode - Zero-Coordination Gaming                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Phase: [█████████░] 9/9 | Actor: 👤 Alice | State: IN_COMBAT              │
+│ Phase: [██████████] 6/10 | Step: 2/4 | 60% Complete                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Match State:                    │ Current Action:                           │
-│ • Challenge ID: abc123...       │ 🔐 Creating move commitment               │
-│ • Total Stake: 200 mana         │ ⏳ Waiting for user input...             │  
-│ • Combat Round: 2/3             │                                           │
-│ • Units Alive: Alice(3) Bob(4)  │                                           │
+│ Match State HUD:                                                            │
+│ • Challenge ID: abc123...                                                   │
+│ • Total Stake: 200 mana                                                     │
+│ • Combat Round: 2/3                                                         │
+│ • Units Alive: Alice(3) Bob(2)                                             │
+│ • Current Actor: 👤 Alice                                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 📋 Step-by-Step Explanation:                                               │
 │                                                                             │
-│ Alice is now creating her move commitment for combat round 2. In this      │
-│ revolutionary architecture, she must:                                       │
+│ 📋 Current Action: 🔐 Creating SHA256 commitment of combat moves...        │
 │                                                                             │
-│ 1. 🎯 Choose tactical moves for each of her 3 remaining units              │
-│ 2. 🔐 Create a SHA256 hash commitment of these moves                       │
-│ 3. 📡 Publish the commitment to Nostr relay via KIND 31003 event          │
+│ 📖 Detailed Explanation:                                                   │
 │                                                                             │
-│ This commitment/reveal scheme prevents cheating - Alice cannot change      │
-│ her moves after seeing Bob's commitment, ensuring fair play through        │
-│ cryptographic mathematics rather than trust.                               │
+│ Combat uses the same commitment/reveal pattern. Alice chooses tactical     │
+│ moves for each of her units and commits to them with SHA256. This         │
+│ prevents her from changing moves after seeing Bob's commitment -           │
+│ ensuring fair tactical play.                                               │
 │                                                                             │
-│ The game engine acts as a pure validator and cannot manipulate this        │
-│ process - it only verifies that moves match commitments later.             │
+│ 🔧 Technical Details:                                                      │
+│   • Challenger (Alice) always moves first                                  │
+│   • move_commit = SHA256(unit_moves + nonce)                              │  
+│   • Prevents move manipulation after seeing opponent                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 🎯 Press [ENTER] to continue to next step | [Q] to quit tutorial           │
+│ 🎯 [ENTER/→] Next Step | [←] Previous Step | [↑↓] Scroll | [Q/ESC] Quit   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 🎨 **Actor Indicators**
-- 👤 **Player Actions** (Alice/Bob making moves)
-- 🎮 **Game Engine** (Validation/Distribution)  
-- 📡 **Nostr Relay** (Event forwarding)
-- 🏦 **CDK Mint** (Token operations)
+### 🎮 **Interactive Controls**
+- **[ENTER] or [→]**: Advance to next step
+- **[←]**: Go back to previous step  
+- **[↑] / [↓]**: Scroll through explanation text
+- **[Q] or [ESC]**: Quit tutorial
 
-### 📊 **Progress Visualization**
-- **Phase Progress Bar**: Visual indicator of tutorial progress
-- **Match State Panel**: Real-time game state information
-- **Action Description**: Detailed explanation of current step
-- **Interactive Prompts**: User controls tutorial pacing
+### 🎨 **Color-Coded Actors**
+- **👤 Players** (Alice/Bob): Purple - Player-controlled actions
+- **📡 Nostr Relay**: Blue - Communication infrastructure  
+- **🎮 Game Engine**: Orange - Validation authority
+- **🏦 Cashu Mint**: Orange - Token operations
+
+### 📊 **Tutorial Features**
+- **Complete 9-Phase Flow**: All phases from mana acquisition to loot distribution
+- **Real-Time HUD**: Live match state visualization
+- **Exhaustive Explanations**: Detailed technical documentation for each step
+- **Interactive Pacing**: User controls tutorial speed
+- **Visual Progress**: Progress bar and phase indicators
+- **Scrollable Content**: Handle long explanations gracefully
+
+### 🔍 **Educational Value**
+The tutorial mode serves as comprehensive documentation of the revolutionary zero-coordination gaming architecture, explaining:
+
+- **Cryptographic Commitment/Reveal Schemes**: How mathematical proofs prevent cheating
+- **Temporal Asynchronicity**: How Nostr enables offline gameplay
+- **Pure Validation Engine**: Why the Game Engine cannot manipulate outcomes  
+- **Economic Model**: The 95%/5% player-friendly reward distribution
+- **Anti-Cheat Mathematics**: How cryptography replaces trust
+
+### 💡 **Usage Tips**
+- Take your time - each step contains valuable architectural insights
+- Use the scroll feature to read complete technical explanations
+- Navigate back and forth to reinforce understanding
+- The tutorial mirrors the actual integration test flow

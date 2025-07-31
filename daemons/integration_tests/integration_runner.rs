@@ -20,6 +20,9 @@ use tracing::{info, warn};
 // Import the comprehensive test suite
 use integration_tests;
 
+// Tutorial module for interactive TUI mode
+mod tutorial;
+
 /// Service orchestration for integration testing
 pub struct IntegrationRunner {
     services: Vec<Service>,
@@ -449,8 +452,8 @@ impl Drop for IntegrationRunner {
 
 /// Main entry point for Rust-based integration testing
 pub async fn run_complete_integration_test() -> Result<()> {
-    // Initialize logging
-    tracing_subscriber::fmt().with_env_filter("debug").init();
+    // Initialize logging with minimal output (only info level)
+    tracing_subscriber::fmt().with_env_filter("info").init();
 
     info!("🚀 STARTING RUST-FIRST INTEGRATION TEST RUNNER");
     info!("🔑 PRINCIPLE: Maximal Rust functionality, minimal shell dependencies");
@@ -479,5 +482,49 @@ pub async fn run_complete_integration_test() -> Result<()> {
 /// Binary main function for running the integration test as a standalone executable
 #[tokio::main]
 async fn main() -> Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+    
+    match args.get(1).map(|s| s.as_str()) {
+        Some("--tutorial") => run_tutorial_mode().await,
+        Some("--debug") => run_debug_mode().await,
+        Some("--help") | Some("-h") => {
+            print_help();
+            Ok(())
+        }
+        None => run_complete_integration_test().await,  // Default mode
+        Some(arg) => {
+            eprintln!("Unknown argument: {}", arg);
+            print_help();
+            std::process::exit(1);
+        }
+    }
+}
+
+fn print_help() {
+    println!("Manastr Integration Test Runner");
+    println!();
+    println!("USAGE:");
+    println!("  integration-runner [OPTIONS]");
+    println!();
+    println!("OPTIONS:");
+    println!("  --tutorial    Run interactive tutorial mode with ratatui TUI");
+    println!("  --debug       Run with detailed console logging");
+    println!("  --help, -h    Show this help message");
+    println!();
+    println!("DEFAULT:");
+    println!("  Run integration tests with minimal console output");
+}
+
+/// Run integration test with tutorial TUI interface
+async fn run_tutorial_mode() -> Result<()> {
+    tutorial::run_interactive_tutorial().await
+}
+
+/// Run integration test with debug console logging
+async fn run_debug_mode() -> Result<()> {
+    // Initialize logging with debug level
+    tracing_subscriber::fmt().with_env_filter("debug").init();
+    
+    info!("🐛 DEBUG MODE: Running integration test with detailed logging");
     run_complete_integration_test().await
 }
