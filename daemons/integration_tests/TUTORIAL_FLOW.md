@@ -1,18 +1,20 @@
 # Manastr Tutorial Flow - Complete Player-Driven Match Architecture
 
 ## Detailed Mermaid Diagram: 9-Phase Zero-Coordination Match Flow
-    box rgb(139,69,255) "🎮 Players" P1, P2, NR
-    end
-    box rgb(255,153,0) "game authority" GE, CDK
-    end
 
 ```mermaid
 sequenceDiagram
+    box rgb(139,69,255) "🎮 Players" P1, P2, NR
         participant P1 as 👤 Alice (Player 1)
         participant P2 as 👤 Bob (Player 2)
+    end
+    box rgb(0,0,255) "comms" NR
         participant NR as 📡 Nostr Relay
+    end
+    box rgb(255,153,0) "game authority" GE, CDK
         participant GE as 🎮 Game Engine
         participant CDK as 🏦 Cashu Mint
+    end
     
     Note over P1,CDK: 🚀 PHASE 0: Acquire Mana
     P1->>CDK: Request mana tokens for match entry
@@ -69,8 +71,8 @@ sequenceDiagram
     GE->>GE: Validate acceptance format & signature
     GE->>GE: Update match state: ACCEPTED
     note over P1,CDK: 🌀 Temporal suspension complete
-    Note over P1,P2: 🔓 PHASE 3: Token Revelation
-    Note left of P1: 🎫 Alice reveals actual Cashu tokens<br/>🔍 Allows army verification
+    Note over P1,CDK: 🔓 PHASE 3: Token Revelation
+    Note right of P1: 🎫 Alice reveals actual Cashu tokens<br/>🔍 Allows army verification
     P1->>NR: Publish KIND 31002 (Token Reveal)
     Note right of P2: 🎫 Bob reveals actual Cashu tokens<br/>🔍 Allows army verification  
     P2->>NR: Publish KIND 31002 (Token Reveal)
