@@ -229,24 +229,6 @@ arch:
 
 # Exit the matrix - Neo's awakening to zero-coordination gaming
 exit-matrix:
-    @echo "💊 EJECTING NEO FROM THE MATRIX"
-    @echo "==============================="
-    @echo ""
-    @echo "🎮 Welcome to the Matrix of Revolutionary Gaming Architecture"
-    @echo ""
-    @echo "This interactive TUI tutorial walks you through the complete 9-phase"
-    @echo "zero-coordination match flow that represents a paradigm shift in"
-    @echo "multiplayer gaming - from trusted servers to pure cryptographic validation."
-    @echo ""
-    @echo "🔍 What you'll discover:"
-    @echo "  • How players control everything via Nostr events"
-    @echo "  • Cashu C values providing tamper-proof randomness"
-    @echo "  • Cryptographic commitment/reveal preventing all cheating"
-    @echo "  • Game Engine as pure validator (cannot manipulate outcomes)"
-    @echo "  • Complete decentralization without trusted authorities"
-    @echo ""
-    @echo "💊 Take the red pill and see how deep the rabbit hole goes..."
-    @echo ""
     cd daemons/integration_tests && cargo run --bin integration-runner -- --tutorial
 
 # Help for Claude Code users
