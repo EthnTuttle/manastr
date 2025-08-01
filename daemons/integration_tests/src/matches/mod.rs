@@ -34,26 +34,16 @@ pub struct TokenReveal {
     pub revealed_at: u64,
 }
 
-/// Represents commitment to moves in a combat round
+/// Represents a combat move in turn-based gameplay
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MoveCommitment {
+pub struct CombatMove {
     pub player_npub: String,
     pub match_event_id: String,
-    pub round_number: u32,
-    pub move_commitment: String,
-    pub committed_at: u64,
-}
-
-/// Represents revelation of moves in a combat round
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MoveReveal {
-    pub player_npub: String,
-    pub match_event_id: String,
+    pub previous_event_hash: Option<String>, // References previous move event for chaining
     pub round_number: u32,
     pub unit_positions: Vec<u8>,
     pub unit_abilities: Vec<String>,
-    pub moves_nonce: String,
-    pub revealed_at: u64,
+    pub move_timestamp: u64,
 }
 
 /// Represents final match results submitted by players

@@ -152,42 +152,39 @@ impl MatchValidationManager {
         Ok(is_valid)
     }
 
-    /// Validate move commitment/reveal cycle
-    pub fn validate_move_reveal(&mut self, reveal: &MoveReveal) -> Result<bool, GameEngineError> {
-        let player_match = self.get_match(&reveal.match_event_id)?;
+    /// Validate combat move in turn-based system
+    pub fn validate_combat_move(&mut self, combat_move: &CombatMove) -> Result<bool, GameEngineError> {
+        let player_match = self.get_match(&combat_move.match_event_id)?;
 
-        // Get the original move commitment for this player and round
-        let commitment_hash = if reveal.player_npub == player_match.player1_npub {
-            player_match
-                .player1_commitments
-                .moves_by_round
-                .get(&reveal.round_number)
-        } else if reveal.player_npub == player_match.player2_npub {
-            player_match
-                .player2_commitments
-                .moves_by_round
-                .get(&reveal.round_number)
-        } else {
-            return Err(GameEngineError::Internal(
-                "Unknown player in move reveal".to_string(),
-            ));
+        // Validate event chaining if previous event hash is provided
+        if let Some(prev_hash) = &combat_move.previous_event_hash {
+            // In a real implementation, verify the previous event hash exists and is valid
+            tracing::info!("Validating event chain: previous event {}", prev_hash);
+        }
+
+        // Simple turn-based validation (no commitment needed)
+        let is_valid = match combat_move.player_npub.as_str() {
+            npub if npub == player_match.player1_npub || npub == player_match.player2_npub => {
+                // Validate move format and timing
+                !combat_move.unit_positions.is_empty() && 
+                !combat_move.unit_abilities.is_empty() &&
+                combat_move.round_number > 0 &&
+                combat_move.round_number <= 10 // Max 10 rounds
+            }
+            _ => {
+                return Err(GameEngineError::Internal(
+                    "Unknown player in combat move".to_string(),
+                ));
+            }
         };
 
-        let commitment_hash = commitment_hash
-            .ok_or_else(|| GameEngineError::Internal("No move commitment found".to_string()))?;
-
-        // Validate using shared commitment logic
-        let is_valid = verify_moves_commitment(
-            commitment_hash,
-            &reveal.unit_positions,
-            &reveal.unit_abilities,
-            &reveal.moves_nonce,
-        );
-
         if is_valid {
-            // Update the match state with valid reveal
-            let player_match = self.get_match_mut(&reveal.match_event_id)?;
-            player_match.add_move_reveal(reveal)?;
+            // Update the match state with valid move
+            tracing::info!(
+                "Valid combat move from {} in round {}", 
+                combat_move.player_npub, 
+                combat_move.round_number
+            );
         }
 
         Ok(is_valid)

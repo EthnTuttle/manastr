@@ -180,13 +180,9 @@ impl MatchTracker {
                 let match_id = reveal.match_event_id.clone();
                 Ok((match_id, MatchEvent::TokenRevealed(reveal)))
             }
-            PlayerMatchEvent::MoveCommitment(commitment) => {
-                let match_id = commitment.match_event_id.clone();
-                Ok((match_id, MatchEvent::MoveCommitted(commitment)))
-            }
-            PlayerMatchEvent::MoveReveal(reveal) => {
-                let match_id = reveal.match_event_id.clone();
-                Ok((match_id, MatchEvent::MoveRevealed(reveal)))
+            PlayerMatchEvent::CombatMove(combat_move) => {
+                let match_id = combat_move.match_event_id.clone();
+                Ok((match_id, MatchEvent::CombatMoveSubmitted(combat_move)))
             }
             PlayerMatchEvent::MatchResult(result) => {
                 let match_id = result.match_event_id.clone();

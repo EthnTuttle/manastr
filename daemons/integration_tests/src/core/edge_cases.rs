@@ -7,7 +7,7 @@ use tokio::time::sleep;
 use tracing::info;
 
 use super::shared::TestSuiteCore;
-use crate::matches::{MoveReveal, TokenReveal};
+use crate::matches::{CombatMove, TokenReveal};
 
 /// Tests edge cases and malicious events
 ///
@@ -114,18 +114,18 @@ async fn test_timing_attacks(core: &TestSuiteCore) -> Result<()> {
     let player1 = core.create_test_player("Timing1").await?;
     let _player2 = core.create_test_player("Timing2").await?;
 
-    // Try to reveal moves before commitment phase
-    let premature_reveal = MoveReveal {
+    // Try to publish invalid combat move  
+    let invalid_move = CombatMove {
         player_npub: player1.public_key.to_string(),
         match_event_id: "timing_test".to_string(),
+        previous_event_hash: Some("invalid_hash".to_string()),
         round_number: 1,
         unit_positions: vec![1, 2, 3],
         unit_abilities: vec!["boost".to_string()],
-        moves_nonce: "timing_nonce".to_string(),
-        revealed_at: Utc::now().timestamp() as u64,
+        move_timestamp: Utc::now().timestamp() as u64,
     };
 
-    core.publish_event(&player1, 31004, &premature_reveal)
+    core.publish_event(&player1, 21003, &invalid_move)
         .await?;
 
     // Game engine should reject out-of-order reveals

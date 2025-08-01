@@ -77,8 +77,7 @@ pub enum MatchEvent {
     ChallengePosted(MatchChallenge),
     ChallengeAccepted(MatchAcceptance),
     TokenRevealed(TokenReveal),
-    MoveCommitted(MoveCommitment),
-    MoveRevealed(MoveReveal),
+    CombatMoveSubmitted(CombatMove),
     ResultSubmitted(MatchResult),
     LootDistributed(LootDistribution),
     InvalidationTriggered(String), // reason
@@ -100,7 +99,7 @@ pub enum GameEngineAction {
         match_id: String,
         player_npub: String,
     },
-    ValidateMoveCommitment {
+    ValidateCombatMove {
         match_id: String,
         player_npub: String,
         round: u32,
@@ -242,21 +241,21 @@ impl MatchState {
                     player1_revealed,
                     player2_revealed,
                 },
-                MatchEvent::MoveCommitted(commitment),
+                MatchEvent::CombatMoveSubmitted(combat_move),
             ) => {
-                let round = commitment.round_number;
-                let actions = vec![GameEngineAction::ValidateMoveCommitment {
-                    match_id: commitment.match_event_id.clone(),
-                    player_npub: commitment.player_npub.clone(),
+                let round = combat_move.round_number;
+                let actions = vec![GameEngineAction::ValidateCombatMove {
+                    match_id: combat_move.match_event_id.clone(),
+                    player_npub: combat_move.player_npub.clone(),
                     round,
                 }];
 
-                // Track commitment
-                if commitment.player_npub == match_data.player1_npub {
+                // Track combat move (turn-based, no commitment needed)
+                if combat_move.player_npub == match_data.player1_npub {
                     if !player1_committed.contains(&round) {
                         player1_committed.push(round);
                     }
-                } else if commitment.player_npub == match_data.player2_npub
+                } else if combat_move.player_npub == match_data.player2_npub
                     && !player2_committed.contains(&round) {
                         player2_committed.push(round);
                     }
@@ -289,17 +288,17 @@ impl MatchState {
                     mut player1_revealed,
                     mut player2_revealed,
                 },
-                MatchEvent::MoveRevealed(reveal),
+                MatchEvent::CombatMoveSubmitted(combat_move),
             ) => {
-                let round = reveal.round_number;
+                let round = combat_move.round_number;
                 let mut actions = vec![];
 
-                // Track reveal
-                if reveal.player_npub == match_data.player1_npub {
+                // Track combat move (turn-based)
+                if combat_move.player_npub == match_data.player1_npub {
                     if !player1_revealed.contains(&round) {
                         player1_revealed.push(round);
                     }
-                } else if reveal.player_npub == match_data.player2_npub
+                } else if combat_move.player_npub == match_data.player2_npub
                     && !player2_revealed.contains(&round) {
                         player2_revealed.push(round);
                     }
@@ -307,7 +306,7 @@ impl MatchState {
                 // Check if round is complete (both players revealed)
                 if player1_revealed.contains(&round) && player2_revealed.contains(&round) {
                     actions.push(GameEngineAction::ExecuteCombatRound {
-                        match_id: reveal.match_event_id.clone(),
+                        match_id: combat_move.match_event_id.clone(),
                         round,
                     });
                 }

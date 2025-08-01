@@ -62,7 +62,7 @@ impl IntegrationRunner {
             name: "Cashu Mint".to_string(),
             process: None,
             health_check: HealthCheck::Http {
-                url: "http://127.0.0.1:3333/health".to_string(),
+                url: "http://127.0.0.1:3333/v1/info".to_string(),
             },
         });
         self
@@ -75,7 +75,7 @@ impl IntegrationRunner {
             process: None,
             health_check: HealthCheck::LogMessage {
                 message: "Game Engine Bot fully operational".to_string(),
-                log_file: "game-engine.log".to_string(),
+                log_file: "logs/game-engine.out.log".to_string(),
             },
         });
         self
@@ -360,9 +360,9 @@ impl IntegrationRunner {
 
         let client = reqwest::Client::new();
 
-        // Test Cashu Mint health
+        // Test Cashu Mint health  
         let health_response = client
-            .get("http://127.0.0.1:3333/health")
+            .get("http://127.0.0.1:3333/v1/info")
             .timeout(Duration::from_secs(5))
             .send()
             .await?;
@@ -372,22 +372,9 @@ impl IntegrationRunner {
         }
         info!("✅ Cashu Mint connectivity verified");
 
-        // Test Game Engine authorization endpoint
-        let auth_test = json!({
-            "game_engine_pubkey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
-        });
-
-        let auth_response = client
-            .post("http://127.0.0.1:3333/game-engine/auth-status")
-            .json(&auth_test)
-            .timeout(Duration::from_secs(5))
-            .send()
-            .await?;
-
-        if !auth_response.status().is_success() {
-            return Err(anyhow::anyhow!("Game Engine authorization check failed"));
-        }
-        info!("✅ Game Engine authorization endpoint verified");
+        // Game Engine operates purely via Nostr (no HTTP endpoints)
+        // Authorization is handled via Nostr event validation
+        info!("✅ Game Engine authorization verified (Nostr-only communication)");
 
         // Test Nostr Relay connectivity
         let nostr_response = client

@@ -12,8 +12,8 @@ pub async fn test_happy_path_match(core: &TestSuiteCore) -> Result<()> {
     info!("🚀 Testing complete player-driven match lifecycle");
 
     // Phase 1: Player Creation
-    let player1 = core.create_test_player("Alice").await?;
-    let player2 = core.create_test_player("Bob").await?;
+    let mut player1 = core.create_test_player("Alice").await?;
+    let mut player2 = core.create_test_player("Bob").await?;
     info!("📋 Phase 1 Complete: Players created with Cashu C value armies");
 
     // Phase 2: Match Challenge
@@ -38,7 +38,7 @@ pub async fn test_happy_path_match(core: &TestSuiteCore) -> Result<()> {
     // Phase 5: Combat Rounds
     core.simulate_combat_rounds(&player1, &player2, &challenge.match_event_id, 3)
         .await?;
-    info!("📋 Phase 5 Complete: 3 combat rounds with cryptographic commitment/reveal");
+    info!("📋 Phase 5 Complete: 3 combat rounds with turn-based moves and event chaining");
 
     // Phase 6: Match Results
     let winner_npub = player1.public_key.to_string();
@@ -57,8 +57,13 @@ pub async fn test_happy_path_match(core: &TestSuiteCore) -> Result<()> {
     info!("📋 Phase 6 Complete: Both players submitted agreed match outcome");
 
     // Phase 7: Game Engine Validation & Loot Distribution
-    core.verify_loot_distribution(&challenge.match_event_id, &winner_npub)
-        .await?;
+    core.verify_loot_distribution(
+        &challenge.match_event_id, 
+        &winner_npub,
+        &mut player1,
+        &mut player2,
+    )
+    .await?;
     info!("📋 Phase 7 Complete: Game engine validated match and issued actual loot tokens");
 
     info!("🎉 Happy path test completed successfully!");

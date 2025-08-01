@@ -9,13 +9,12 @@ use tracing::{debug, error, info};
 /// Game engine only validates and publishes loot distribution
 ///
 // Custom Nostr event kinds for Manastr
-pub const KIND_MATCH_CHALLENGE: Kind = Kind::Custom(31000);
-pub const KIND_MATCH_ACCEPTANCE: Kind = Kind::Custom(31001);
-pub const KIND_TOKEN_REVEAL: Kind = Kind::Custom(31002);
-pub const KIND_MOVE_COMMITMENT: Kind = Kind::Custom(31003);
-pub const KIND_MOVE_REVEAL: Kind = Kind::Custom(31004);
-pub const KIND_MATCH_RESULT: Kind = Kind::Custom(31005);
-pub const KIND_LOOT_DISTRIBUTION: Kind = Kind::Custom(31006);
+pub const KIND_MATCH_CHALLENGE: Kind = Kind::Custom(21000);
+pub const KIND_MATCH_ACCEPTANCE: Kind = Kind::Custom(21001);
+pub const KIND_TOKEN_REVEAL: Kind = Kind::Custom(21002);
+pub const KIND_COMBAT_MOVE: Kind = Kind::Custom(21003);
+pub const KIND_MATCH_RESULT: Kind = Kind::Custom(21004);
+pub const KIND_LOOT_DISTRIBUTION: Kind = Kind::Custom(21005);
 
 /// Match challenge created by Player 1
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -50,26 +49,16 @@ pub struct TokenReveal {
     pub revealed_at: u64,
 }
 
-/// Move commitment for a specific round
+/// Combat move for turn-based gameplay
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MoveCommitment {
+pub struct CombatMove {
     pub player_npub: String,
     pub match_event_id: String, // References the challenge EventId
-    pub round_number: u32,
-    pub move_commitment: String, // hash(unit_positions + unit_abilities + nonce)
-    pub committed_at: u64,
-}
-
-/// Move revelation for a specific round
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MoveReveal {
-    pub player_npub: String,
-    pub match_event_id: String, // References the challenge EventId
+    pub previous_event_hash: Option<String>, // References previous move event for chaining
     pub round_number: u32,
     pub unit_positions: Vec<u8>,     // Positions of units for this round
     pub unit_abilities: Vec<String>, // Abilities used this round
-    pub moves_nonce: String,         // Nonce from commitment
-    pub revealed_at: u64,
+    pub move_timestamp: u64,
 }
 
 /// Final match result published by both players
@@ -224,57 +213,30 @@ impl PlayerMatch {
         Ok(())
     }
 
-    pub fn add_move_commitment(&mut self, commitment: &MoveCommitment) -> Result<(), String> {
-        let round = commitment.round_number;
+    pub fn add_combat_move(&mut self, combat_move: &CombatMove) -> Result<(), String> {
+        let round = combat_move.round_number;
 
-        if commitment.player_npub == self.player1_npub {
-            self.player1_commitments
-                .moves_by_round
-                .insert(round, commitment.move_commitment.clone());
-        } else if commitment.player_npub == self.player2_npub {
-            self.player2_commitments
-                .moves_by_round
-                .insert(round, commitment.move_commitment.clone());
+        if combat_move.player_npub == self.player1_npub {
+            // Store combat move for player 1 (simplified)
+            tracing::info!("Player 1 combat move recorded for round {}", round);
+        } else if combat_move.player_npub == self.player2_npub {
+            // Store combat move for player 2 (simplified)
+            tracing::info!("Player 2 combat move recorded for round {}", round);
         } else {
-            return Err("Move commitment from unknown player".to_string());
+            return Err("Combat move from unknown player".to_string());
         }
 
         debug!(
-            "Added move commitment for round {} from {}",
-            round, commitment.player_npub
+            "Added combat move for round {} from {}",
+            round, combat_move.player_npub
         );
         Ok(())
     }
 
-    pub fn add_move_reveal(&mut self, reveal: &MoveReveal) -> Result<(), String> {
-        let round = reveal.round_number;
-
-        if reveal.player_npub == self.player1_npub {
-            self.player1_reveals.moves_by_round.insert(
-                round,
-                (
-                    reveal.unit_positions.clone(),
-                    reveal.unit_abilities.clone(),
-                    reveal.moves_nonce.clone(),
-                ),
-            );
-        } else if reveal.player_npub == self.player2_npub {
-            self.player2_reveals.moves_by_round.insert(
-                round,
-                (
-                    reveal.unit_positions.clone(),
-                    reveal.unit_abilities.clone(),
-                    reveal.moves_nonce.clone(),
-                ),
-            );
-        } else {
-            return Err("Move reveal from unknown player".to_string());
-        }
-
-        debug!(
-            "Added move reveal for round {} from {}",
-            round, reveal.player_npub
-        );
+    /// This method is no longer needed in turn-based system but kept for compatibility
+    pub fn add_move_reveal_deprecated(&mut self, _reveal: &str) -> Result<(), String> {
+        // Turn-based system doesn't need separate reveal tracking
+        tracing::info!("Move reveal deprecated in turn-based system");
         Ok(())
     }
 
@@ -385,14 +347,14 @@ impl TokenReveal {
     }
 }
 
-impl MoveCommitment {
+impl CombatMove {
     pub fn to_nostr_event(
         &self,
         keys: &Keys,
         match_event_id: &str,
     ) -> Result<Event, Box<dyn std::error::Error>> {
         let content = serde_json::to_string(self)?;
-        let tags = vec![
+        let mut tags = vec![
             Tag::event(nostr::EventId::from_hex(match_event_id)?),
             Tag::custom(
                 nostr::TagKind::Custom("round".into()),
@@ -400,35 +362,16 @@ impl MoveCommitment {
             ),
             Tag::custom(
                 nostr::TagKind::Custom("phase".into()),
-                vec!["move_commit".to_string()],
+                vec!["combat_move".to_string()],
             ),
         ];
 
-        let event = EventBuilder::new(KIND_MOVE_COMMITMENT, content, tags).to_event(keys)?;
-        Ok(event)
-    }
-}
+        // Add previous event reference for chaining
+        if let Some(prev_hash) = &self.previous_event_hash {
+            tags.push(Tag::event(nostr::EventId::from_hex(prev_hash)?));
+        }
 
-impl MoveReveal {
-    pub fn to_nostr_event(
-        &self,
-        keys: &Keys,
-        match_event_id: &str,
-    ) -> Result<Event, Box<dyn std::error::Error>> {
-        let content = serde_json::to_string(self)?;
-        let tags = vec![
-            Tag::event(nostr::EventId::from_hex(match_event_id)?),
-            Tag::custom(
-                nostr::TagKind::Custom("round".into()),
-                vec![self.round_number.to_string()],
-            ),
-            Tag::custom(
-                nostr::TagKind::Custom("phase".into()),
-                vec!["move_reveal".to_string()],
-            ),
-        ];
-
-        let event = EventBuilder::new(KIND_MOVE_REVEAL, content, tags).to_event(keys)?;
+        let event = EventBuilder::new(KIND_COMBAT_MOVE, content, tags).to_event(keys)?;
         Ok(event)
     }
 }
@@ -598,7 +541,7 @@ mod tests {
     }
 
     #[test]
-    fn test_move_commitment_reveal_cycle() {
+    fn test_combat_move_cycle() {
         let challenge = MatchChallenge {
             challenger_npub: "npub1alice".to_string(),
             wager_amount: 100,
@@ -612,52 +555,30 @@ mod tests {
 
         let mut player_match = PlayerMatch::new(&challenge, "match_123".to_string());
 
-        // Add move commitments for round 1
-        let alice_commitment = MoveCommitment {
+        // Add combat moves for round 1 (turn-based system)
+        let alice_move = CombatMove {
             player_npub: "npub1alice".to_string(),
             match_event_id: "match_123".to_string(),
-            round_number: 1,
-            move_commitment: "alice_move_commitment_r1".to_string(),
-            committed_at: 1689940000,
-        };
-        player_match.add_move_commitment(&alice_commitment).unwrap();
-
-        let bob_commitment = MoveCommitment {
-            player_npub: "npub1bob".to_string(),
-            match_event_id: "match_123".to_string(),
-            round_number: 1,
-            move_commitment: "bob_move_commitment_r1".to_string(),
-            committed_at: 1689940001,
-        };
-        player_match.add_move_commitment(&bob_commitment).unwrap();
-
-        assert!(player_match.both_players_committed_round(1));
-        assert!(!player_match.both_players_revealed_round(1));
-
-        // Add move reveals for round 1
-        let alice_reveal = MoveReveal {
-            player_npub: "npub1alice".to_string(),
-            match_event_id: "match_123".to_string(),
+            previous_event_hash: None,
             round_number: 1,
             unit_positions: vec![1, 2, 3],
             unit_abilities: vec!["boost".to_string()],
-            moves_nonce: "alice_r1_nonce".to_string(),
-            revealed_at: 1689950000,
+            move_timestamp: 1689940000,
         };
-        player_match.add_move_reveal(&alice_reveal).unwrap();
+        player_match.add_combat_move(&alice_move).unwrap();
 
-        let bob_reveal = MoveReveal {
+        let bob_move = CombatMove {
             player_npub: "npub1bob".to_string(),
             match_event_id: "match_123".to_string(),
+            previous_event_hash: Some("alice_event_hash".to_string()),
             round_number: 1,
             unit_positions: vec![4, 5, 6],
             unit_abilities: vec!["shield".to_string()],
-            moves_nonce: "bob_r1_nonce".to_string(),
-            revealed_at: 1689950001,
+            move_timestamp: 1689940001,
         };
-        player_match.add_move_reveal(&bob_reveal).unwrap();
+        player_match.add_combat_move(&bob_move).unwrap();
 
-        assert!(player_match.both_players_committed_round(1));
-        assert!(player_match.both_players_revealed_round(1));
+        // In turn-based system, moves are immediately available
+        // No separate commitment/reveal needed
     }
 }

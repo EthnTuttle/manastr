@@ -14,8 +14,7 @@ pub enum PlayerMatchEvent {
     Challenge(MatchChallenge),
     Acceptance(MatchAcceptance),
     TokenReveal(TokenReveal),
-    MoveCommitment(MoveCommitment),
-    MoveReveal(MoveReveal),
+    CombatMove(CombatMove),
     MatchResult(MatchResult),
 }
 
@@ -65,13 +64,12 @@ impl NostrClient {
         // Single efficient filter for all game event types
         let game_events_filter = nostr::Filter::new()
             .kinds(vec![
-                KIND_MATCH_CHALLENGE,  // 31000 - Player creates match
-                KIND_MATCH_ACCEPTANCE, // 31001 - Player accepts challenge
-                KIND_TOKEN_REVEAL,     // 31002 - Player reveals Cashu tokens
-                KIND_MOVE_COMMITMENT,  // 31003 - Player commits to round moves
-                KIND_MOVE_REVEAL,      // 31004 - Player reveals actual moves
-                KIND_MATCH_RESULT,     // 31005 - Player submits final match state
-                                       // NOTE: KIND_LOOT_DISTRIBUTION (31006) excluded - game engine publishes this
+                KIND_MATCH_CHALLENGE,  // 21000 - Player creates match
+                KIND_MATCH_ACCEPTANCE, // 21001 - Player accepts challenge
+                KIND_TOKEN_REVEAL,     // 21002 - Player reveals Cashu tokens
+                KIND_COMBAT_MOVE,      // 21003 - Player submits combat move
+                KIND_MATCH_RESULT,     // 21004 - Player submits final match state
+                                       // NOTE: KIND_LOOT_DISTRIBUTION (21005) excluded - game engine publishes this
             ])
             .since(since_timestamp);
 
@@ -177,20 +175,14 @@ impl NostrClient {
                 })?;
                 PlayerMatchEvent::TokenReveal(reveal)
             }
-            kind if kind == KIND_MOVE_COMMITMENT => {
-                let commitment: MoveCommitment =
+            kind if kind == KIND_COMBAT_MOVE => {
+                let combat_move: CombatMove =
                     serde_json::from_str(&event.content).map_err(|e| {
                         GameEngineError::NostrError(format!(
-                            "Failed to parse move commitment: {e}"
+                            "Failed to parse combat move: {e}"
                         ))
                     })?;
-                PlayerMatchEvent::MoveCommitment(commitment)
-            }
-            kind if kind == KIND_MOVE_REVEAL => {
-                let reveal: MoveReveal = serde_json::from_str(&event.content).map_err(|e| {
-                    GameEngineError::NostrError(format!("Failed to parse move reveal: {e}"))
-                })?;
-                PlayerMatchEvent::MoveReveal(reveal)
+                PlayerMatchEvent::CombatMove(combat_move)
             }
             kind if kind == KIND_MATCH_RESULT => {
                 let result: MatchResult = serde_json::from_str(&event.content).map_err(|e| {

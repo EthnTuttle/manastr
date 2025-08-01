@@ -39,6 +39,7 @@ pub struct TutorialApp {
     alice_keys: Option<Keys>,
     bob_keys: Option<Keys>,
     show_about: bool,
+    show_exit_confirmation: bool,
 }
 
 /// Individual tutorial phase
@@ -63,7 +64,7 @@ pub struct TutorialStep {
 #[derive(Clone)]
 pub struct MatchState {
     challenge_id: String,
-    total_stake: u32,
+    total_mana: u32,
     combat_round: u32,
     alice_units: u32,
     bob_units: u32,
@@ -135,7 +136,7 @@ impl Default for MatchState {
     fn default() -> Self {
         Self {
             challenge_id: "abc123...".to_string(),
-            total_stake: 200,
+            total_mana: 200,
             combat_round: 1,
             alice_units: 4,
             bob_units: 4,
@@ -213,7 +214,7 @@ impl TutorialApp {
                         explanation: "Alice broadcasts her challenge to the decentralized Nostr network using a custom application event (21000+ range for Manastr). This event contains her army commitment, mana amount, and challenge terms. Each challenge creates a unique event that can be referenced by other players.".to_string(),
                         action: "📡 Publishing KIND 21000 Game Challenge event...".to_string(),
                         technical_notes: vec![
-                            "Event includes: army_commitment, stake, terms".to_string(),
+                            "Event includes: army_commitment, mana_amount, terms".to_string(),
                             "Cryptographically signed by Alice's key".to_string(),
                             "Can be created offline, published later".to_string(),
                         ],
@@ -241,7 +242,7 @@ impl TutorialApp {
                         explanation: "The Game Engine acts as a pure validator, verifying the challenge format and signature. It updates its internal state machine but cannot manipulate the game outcome - it only validates what players have committed to cryptographically.".to_string(),
                         action: "✅ Validating challenge and updating state machine...".to_string(),
                         technical_notes: vec![
-                            "Validates: signature, format, stake amount".to_string(),
+                            "Validates: signature, format, mana amount".to_string(),
                             "State transition: NONE → CHALLENGED".to_string(),
                             "Engine cannot manipulate player commitments".to_string(),
                         ],
@@ -282,7 +283,7 @@ impl TutorialApp {
                         technical_notes: vec![
                             "References Alice's challenge event ID".to_string(),
                             "Contains Bob's army commitment".to_string(),
-                            "Confirms stake matching Alice's terms".to_string(),
+                            "Confirms mana amount matching Alice's terms".to_string(),
                         ],
                         actor: None,
                     },
@@ -478,18 +479,18 @@ impl TutorialApp {
                 steps: vec![
                     TutorialStep {
                         description: "Game Engine burns players' original mana tokens".to_string(),
-                        explanation: "With the match validated, the Game Engine uses its authorized signature to burn both players' original mana tokens from the CDK mint. This prevents double-spending and officially consumes the staked tokens.".to_string(),
-                        action: "🔥 Burning staked mana tokens...".to_string(),
+                        explanation: "With the match validated, the Game Engine uses its authorized signature to burn both players' original mana tokens from the CDK mint. This prevents double-spending and officially consumes the wagered tokens.".to_string(),
+                        action: "🔥 Burning wagered mana tokens...".to_string(),
                         technical_notes: vec![
                             "Uses Game Engine's authorized mint signature".to_string(),
-                            "Burns both Alice's and Bob's staked tokens".to_string(),
+                            "Burns both Alice's and Bob's wagered tokens".to_string(),
                             "Prevents double-spending of game tokens".to_string(),
                         ],
                         actor: None,
                     },
                     TutorialStep {
                         description: "Game Engine mints loot tokens for the winner".to_string(),
-                        explanation: "The Game Engine mints new loot tokens for Alice (the winner). Following the 95%/5% economic model, Alice receives 190 tokens (95% of the 200 total stake) while 10 tokens go to system fees. These tokens are locked to Alice's npub.".to_string(),
+                        explanation: "The Game Engine mints new loot tokens for Alice (the winner). Following the 95%/5% economic model, Alice receives 190 tokens (95% of the 200 total mana) while 10 tokens go to system fees. These tokens are locked to Alice's npub.".to_string(),
                         action: "🎁 Minting 190 loot tokens for Alice...".to_string(),
                         technical_notes: vec![
                             "Economic model: 95% to winner, 5% system fee".to_string(),
@@ -510,14 +511,14 @@ impl TutorialApp {
                         actor: Some(Actor::GameEngine),
                     },
                     TutorialStep {
-                        description: "🎉 Welcome to the Real World - Gameplay Client Ready!".to_string(),
-                        explanation: "Congratulations Neo! You've witnessed the complete revolutionary architecture. You now understand how players control entire match flows through cryptographic commitments, how the Game Engine only validates outcomes, and how mathematics prevents all cheating.\n\nThe Matrix of trusted gaming servers has been shattered. You are now ready to play with the locally running services that powered this tutorial.\n\n🎮 Your local gaming environment is operational:\n• Cashu Mint (127.0.0.1:3333) - Ready for mana tokens\n• Game Engine Bot (127.0.0.1:4444) - Pure validator standing by\n• Nostr Relay (127.0.0.1:7777) - Decentralized communication active\n\nPress [P] to launch the gameplay client and experience zero-coordination gaming firsthand, or [Q] to exit and return to the command line.".to_string(),
-                        action: "🚀 Revolutionary gaming paradigm complete - Ready for gameplay!".to_string(),
+                        description: "🎉 Zero-Coordination Gaming Revolution Complete!".to_string(),
+                        explanation: "Congratulations Neo! You've witnessed the complete revolutionary architecture. You now understand how players control entire match flows through cryptographic commitments, how the Game Engine only validates outcomes, and how mathematics prevents all cheating.\n\nThe Matrix of trusted gaming servers has been shattered. This architecture enables:\n\n🔒 **Cryptographic Security**: Mathematics prevents cheating better than any trusted authority\n📡 **Complete Decentralization**: No single point of failure or control\n🎮 **Player Sovereignty**: You control the entire match flow via Nostr events\n⚡ **Zero Coordination**: No central matchmaking or trusted intermediaries needed\n\nThe future of gaming is decentralized, and it starts now!\n\nPress [Q] to exit the tutorial.".to_string(),
+                        action: "🚀 Revolutionary gaming paradigm complete!".to_string(),
                         technical_notes: vec![
-                            "All local services are running and ready".to_string(),
-                            "Gaming wallet can generate armies from C values".to_string(),
-                            "Full match flow available for testing".to_string(),
-                            "Press [P] to launch gameplay client".to_string(),
+                            "Zero-coordination gaming architecture operational".to_string(),
+                            "Cryptographic anti-cheat system proven".to_string(),
+                            "Player-driven match flow demonstrated".to_string(),
+                            "Decentralized gaming revolution achieved".to_string(),
                         ],
                         actor: None,
                     },
@@ -538,6 +539,7 @@ impl TutorialApp {
             alice_keys: None,
             bob_keys: None,
             show_about: false,
+            show_exit_confirmation: false,
         }
     }
 
@@ -678,7 +680,7 @@ impl TutorialApp {
                 self.match_state.combat_round = 3;
                 self.match_state.alice_units = 1;
                 self.match_state.bob_units = 0;
-                self.match_state.total_stake = 200; // Emphasize the 190/10 split
+                self.match_state.total_mana = 200; // Emphasize the 190/10 split
             }
             _ => {}
         }
@@ -836,6 +838,16 @@ impl TutorialApp {
     fn toggle_about(&mut self) {
         self.show_about = !self.show_about;
     }
+
+    /// Show exit confirmation dialog
+    fn show_exit_confirmation(&mut self) {
+        self.show_exit_confirmation = true;
+    }
+
+    /// Hide exit confirmation dialog
+    fn hide_exit_confirmation(&mut self) {
+        self.show_exit_confirmation = false;
+    }
 }
 
 pub async fn run_interactive_tutorial() -> Result<()> {
@@ -864,58 +876,6 @@ pub async fn run_interactive_tutorial() -> Result<()> {
     result
 }
 
-/// Launch the gameplay client using locally running services
-async fn launch_gameplay_client() -> Result<()> {
-    println!("🎮 LAUNCHING MANASTR GAMEPLAY CLIENT");
-    println!("====================================");
-    println!();
-    println!("🌟 Neo, you are now awake. The future of gaming is decentralized.");
-    println!("   There is no going back to trusted servers.");
-    println!();
-    println!("💊 THE REALITY:");
-    println!("  ✅ Zero-coordination gaming is not just possible - it's operational");
-    println!("  ✅ Players can control entire match flows via cryptographic proofs");
-    println!("  ✅ Mathematics prevents cheating better than any trusted authority");
-    println!("  ✅ True decentralization eliminates single points of failure");
-    println!("  ✅ Cashu + Nostr + Pure Validation = Gaming Revolution");
-    println!();
-    println!("🏛️ LOCAL GAMING ENVIRONMENT:");
-    println!("  • Cashu Mint: http://127.0.0.1:3333 (Ready for mana tokens)");
-    println!("  • Game Engine: http://127.0.0.1:4444 (Pure validator standing by)");
-    println!("  • Nostr Relay: ws://127.0.0.1:7777 (Decentralized communication active)");
-    println!();
-    println!("🎯 LAUNCHING REAL GAMING EXPERIENCE...");
-    println!("   Connecting to the ACTUAL services that powered this tutorial!");
-    println!();
-    println!("🔗 ACTIVE SERVICES:");
-    println!("   • Cashu Mint (127.0.0.1:3333) - Ready for REAL mana tokens");
-    println!("   • Game Engine (127.0.0.1:4444) - Pure validator online");
-    println!("   • Nostr Relay (127.0.0.1:7777) - Decentralized communication active");
-    println!();
-    println!("🏛️ LAUNCHING GAMING WALLET WITH REAL C VALUES...");
-    println!("   This demonstrates ACTUAL C value extraction and army generation!");
-    println!("   No simulation - everything connects to your local running services!");
-    println!();
-    
-    // Launch the gaming wallet demo which connects to the local services
-    use std::process::Command;
-    
-    // Instead of trying to launch external commands, just show instructions
-    println!("🚀 Welcome to the real world of zero-coordination gaming! 🎮✨");
-    println!();
-    println!("Ready to challenge other players? Your local services should be running:");
-    println!("  • Create matches with 'just integration' for full system testing");
-    println!("  • Try 'just demo' for gaming wallet demonstration");
-    println!("  • Explore the daemons/integration_tests/src/core/ directory");
-    println!();
-    println!("💡 To start services if not running:");
-    println!("  • Run 'just dev' from the project root");
-    println!("  • Or start individual services as needed");
-    println!();
-    println!("The revolution starts now! The Matrix has been shattered. 🌟");
-    
-    Ok(())
-}
 
 async fn run_tutorial_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
@@ -930,30 +890,51 @@ async fn run_tutorial_loop(
                 if key.kind == KeyEventKind::Press {
                     match key.code {
                         KeyCode::Char('q') | KeyCode::Esc => {
-                            app.should_quit = true;
+                            if app.show_exit_confirmation {
+                                app.hide_exit_confirmation();
+                            } else {
+                                app.show_exit_confirmation();
+                            }
+                        }
+                        KeyCode::Char('y') | KeyCode::Char('Y') => {
+                            if app.show_exit_confirmation {
+                                return Ok(());
+                            }
+                        }
+                        KeyCode::Char('n') | KeyCode::Char('N') => {
+                            if app.show_exit_confirmation {
+                                app.hide_exit_confirmation();
+                            }
                         }
                         KeyCode::Enter | KeyCode::Right => {
-                            app.next_step();
+                            if !app.show_exit_confirmation {
+                                app.next_step();
+                            }
                         }
                         KeyCode::Left => {
-                            app.previous_step();
+                            if !app.show_exit_confirmation {
+                                app.previous_step();
+                            }
                         }
                         KeyCode::Up => {
-                            app.scroll_explanation_up();
+                            if !app.show_exit_confirmation {
+                                app.scroll_explanation_up();
+                            }
                         }
                         KeyCode::Down => {
-                            app.scroll_explanation_down();
-                        }
-                        KeyCode::Char('p') | KeyCode::Char('P') => {
-                            if app.is_final_step() {
-                                return launch_gameplay_client().await;
+                            if !app.show_exit_confirmation {
+                                app.scroll_explanation_down();
                             }
                         }
                         KeyCode::Char('c') | KeyCode::Char('C') => {
-                            app.toggle_combat_details();
+                            if !app.show_exit_confirmation {
+                                app.toggle_combat_details();
+                            }
                         }
                         KeyCode::Char(' ') => {
-                            app.next_animation_frame();
+                            if !app.show_exit_confirmation {
+                                app.next_animation_frame();
+                            }
                         }
                         KeyCode::Char('a') | KeyCode::Char('A') => {
                             app.toggle_about();
@@ -976,6 +957,12 @@ fn draw_tutorial_ui(f: &mut Frame, app: &TutorialApp) {
     if app.show_about {
         // Show About section full screen
         draw_about_section(f, f.area(), app);
+        return;
+    }
+
+    if app.show_exit_confirmation {
+        // Show exit confirmation dialog
+        draw_exit_confirmation_dialog(f, f.area());
         return;
     }
 
@@ -1083,7 +1070,7 @@ fn draw_match_state(f: &mut Frame, area: Rect, app: &TutorialApp) {
     
     let mut state_items = vec![
         ListItem::new(format!("• Challenge ID: {}", state.challenge_id)),
-        ListItem::new(format!("• Total Stake: {} mana", state.total_stake)),
+        ListItem::new(format!("• Total Mana: {} tokens", state.total_mana)),
         ListItem::new(format!("• Combat Round: {}/3", state.combat_round)),
         ListItem::new(format!("• Units Alive: Alice({}) Bob({})", state.alice_units, state.bob_units)),
         ListItem::new(format!("• Current Actor: {} {}", state.current_actor.icon(), state.current_actor.name())),
@@ -1366,7 +1353,6 @@ fn draw_about_section(f: &mut Frame, area: Rect, app: &TutorialApp) {
         ]),
         Line::from("  [C] Toggle combat visualization with real unit stats"),
         Line::from("  [SPACE] Animate unit icons during combat simulation"),
-        Line::from("  [P] Launch gameplay client connected to these same services"),
         Line::from("  [A] Toggle this About section"),
         Line::from(""),
         Line::from(vec![
@@ -1408,9 +1394,63 @@ fn draw_about_section(f: &mut Frame, area: Rect, app: &TutorialApp) {
     f.render_widget(controls, chunks[2]);
 }
 
+fn draw_exit_confirmation_dialog(f: &mut Frame, area: Rect) {
+    // Center the dialog
+    let popup_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(30),
+            Constraint::Length(10),
+            Constraint::Percentage(30),
+        ])
+        .split(area)[1];
+    
+    let popup_area = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(25),
+            Constraint::Percentage(50),
+            Constraint::Percentage(25),
+        ])
+        .split(popup_area)[1];
+
+    // Clear background
+    let clear = Block::default().style(Style::default().bg(Color::Black));
+    f.render_widget(clear, area);
+
+    let confirmation_text = vec![
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("🤔 Exit Tutorial?", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from(""),
+        Line::from("Are you sure you want to exit the"),
+        Line::from("zero-coordination gaming tutorial?"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("[Y] Yes, Exit", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+            Span::raw("    "),
+            Span::styled("[N] No, Continue", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from(""),
+    ];
+
+    let confirmation_dialog = Paragraph::new(confirmation_text)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Confirm Exit")
+                .title_alignment(Alignment::Center)
+                .border_style(Style::default().fg(Color::Red)),
+        )
+        .alignment(Alignment::Center);
+    
+    f.render_widget(confirmation_dialog, popup_area);
+}
+
 fn draw_controls(f: &mut Frame, area: Rect, app: &TutorialApp) {
     let controls_text = if app.is_final_step() {
-        "🎯 [P] Launch Client | [A] About | [C] Combat | [SPACE] Animate | [ENTER/→] Next | [Q/ESC] Quit"
+        "🎯 [A] About | [C] Combat | [SPACE] Animate | [Q/ESC] Quit Tutorial"
     } else if app.match_state.show_combat_details {
         "🎯 [A] About | [C] Hide Combat | [SPACE] Animate | [ENTER/→] Next | [←] Previous | [↑↓] Scroll | [Q/ESC] Quit"
     } else {

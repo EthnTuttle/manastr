@@ -292,13 +292,13 @@ impl GameEngineBot {
                 Ok(())
             }
 
-            GameEngineAction::ValidateMoveCommitment {
+            GameEngineAction::ValidateCombatMove {
                 match_id,
                 player_npub,
                 round,
             } => {
                 info!(
-                    "🔍 Validating move commitment for {} in match {} round {}",
+                    "🔍 Validating combat move for {} in match {} round {}",
                     player_npub, match_id, round
                 );
                 // Move validation is handled by state machine during transition
