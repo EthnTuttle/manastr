@@ -1,3 +1,7 @@
 [submodule "daemons/nostr-relay/nostr-rs-relay"]
 	path = daemons/nostr-relay/nostr-rs-relay
 	url = https://github.com/scsibug/nostr-rs-relay.git
+[submodule "daemons/cdk"]
+	path = daemons/cdk
+	url = git@github.com:EthnTuttle/cdk.git
+	branch = manastr-custom-units
