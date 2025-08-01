@@ -193,7 +193,6 @@ impl IntegrationRunner {
             service.process = Some(child);
         }
 
-        sleep(Duration::from_secs(2)).await; // CDK mint startup delay
         Ok(())
     }
 
@@ -222,7 +221,6 @@ impl IntegrationRunner {
             service.process = Some(child);
         }
 
-        sleep(Duration::from_secs(1)).await;
         Ok(())
     }
 
@@ -254,7 +252,6 @@ impl IntegrationRunner {
             service.process = Some(child);
         }
 
-        sleep(Duration::from_secs(1)).await;
         Ok(())
     }
 

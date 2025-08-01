@@ -118,7 +118,7 @@ impl TestSuiteCore {
         nostr_client.add_relay(self.relay_url.clone()).await?;
         nostr_client.connect().await;
 
-        let mut gaming_wallet = GamingWallet::new(self.mint_url.clone());
+        let mut gaming_wallet = GamingWallet::new(self.mint_url.clone()).await?;
         let gaming_tokens = gaming_wallet.mint_gaming_tokens(100, "mana").await?;
 
         info!(
@@ -389,7 +389,7 @@ impl TestSuiteCore {
         );
 
         // Create a gaming wallet for loot minting using the real CDK mint service
-        let mut game_engine_wallet = GamingWallet::new(self.mint_url.clone());
+        let mut game_engine_wallet = GamingWallet::new(self.mint_url.clone()).await?;
         
         // Calculate optimized loot distribution (95% to winner, 5% system fee)
         let total_wager = 200u64; // 100 mana from each player

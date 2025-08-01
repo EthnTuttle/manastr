@@ -624,9 +624,8 @@ impl TutorialApp {
                 self.match_state.alice_units = 4;
                 self.match_state.bob_units = 4;
                 
-                // Initialize real wallets and simulate combat on first step of combat phase
+                // Initialize deterministic tutorial data and simulate combat on first step of combat phase
                 if self.current_step == 0 && self.match_state.combat_results.is_empty() {
-                    self.initialize_real_wallets();
                     // For tutorial, we'll use deterministic C values that match what the real mint would generate
                     self.generate_deterministic_tutorial_data();
                     self.simulate_demo_combat();
@@ -703,7 +702,7 @@ impl TutorialApp {
 
     /// Initialize real gaming wallets with deterministic keys
     /// This connects to the actual running CDK mint service
-    fn initialize_real_wallets(&mut self) {
+    async fn initialize_real_wallets(&mut self) -> Result<()> {
         // Create deterministic keys for Alice (seeded for tutorial consistency)
         let alice_seed = "alice_deterministic_tutorial_seed_manastr_zero_coordination";
         let alice_keys = Keys::parse(format!("{:0>64}", hex::encode(sha2::Sha256::digest(alice_seed.as_bytes()))))
@@ -715,19 +714,21 @@ impl TutorialApp {
             .unwrap_or_else(|_| Keys::generate());
 
         // Create real gaming wallets connected to local mint
-        let alice_wallet = GamingWallet::new("http://127.0.0.1:3333".to_string());
-        let bob_wallet = GamingWallet::new("http://127.0.0.1:3333".to_string());
+        let alice_wallet = GamingWallet::new("http://127.0.0.1:3333".to_string()).await?;
+        let bob_wallet = GamingWallet::new("http://127.0.0.1:3333".to_string()).await?;
 
         self.alice_keys = Some(alice_keys);
         self.bob_keys = Some(bob_keys);
         self.alice_wallet = Some(alice_wallet);
         self.bob_wallet = Some(bob_wallet);
+        
+        Ok(())
     }
 
     /// Generate real mana tokens with actual C values from the mint
     async fn mint_real_tokens_and_generate_armies(&mut self) -> Result<()> {
         if self.alice_wallet.is_none() {
-            self.initialize_real_wallets();
+            self.initialize_real_wallets().await?;
         }
 
         if let Some(alice_wallet) = &mut self.alice_wallet {

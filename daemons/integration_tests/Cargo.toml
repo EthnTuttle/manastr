@@ -31,6 +31,7 @@ futures = { workspace = true }
 hex = { workspace = true }
 cdk = { workspace = true }
 cdk-fake-wallet = { workspace = true }
+cdk-sqlite = { workspace = true }
 
 # TUI dependencies for tutorial mode
 ratatui = "0.28"

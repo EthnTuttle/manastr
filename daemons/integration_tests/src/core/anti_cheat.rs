@@ -24,7 +24,7 @@ pub async fn test_commitment_verification(core: &TestSuiteCore) -> Result<()> {
     let mut cheating_player = player1.clone();
 
     // Create fake gaming wallet with different tokens
-    cheating_player.gaming_wallet = GamingWallet::new(core.mint_url.clone());
+    cheating_player.gaming_wallet = GamingWallet::new(core.mint_url.clone()).await?;
     let _fake_tokens = cheating_player
         .gaming_wallet
         .mint_gaming_tokens(2, "mana")

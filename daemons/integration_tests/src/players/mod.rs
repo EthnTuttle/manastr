@@ -69,7 +69,7 @@ impl TestPlayer {
         nostr_client.add_relay(relay_url.clone()).await?;
         nostr_client.connect().await;
 
-        let mut gaming_wallet = GamingWallet::new(mint_url);
+        let mut gaming_wallet = GamingWallet::new(mint_url).await?;
         let gaming_tokens = gaming_wallet.mint_gaming_tokens(100, "mana").await?;
 
         info!(
