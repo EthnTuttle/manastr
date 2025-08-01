@@ -56,6 +56,7 @@ pub struct TutorialStep {
     explanation: String,
     action: String,
     technical_notes: Vec<String>,
+    actor: Option<Actor>, // Override phase actor for specific steps
 }
 
 /// Current match state for HUD display
@@ -166,6 +167,7 @@ impl TutorialApp {
                             "Neither mint nor player can bias this randomness".to_string(),
                             "Deterministic testing uses controlled mint keys".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Alice unblinds mana to resolve C value paired with her x value".to_string(),
@@ -176,6 +178,7 @@ impl TutorialApp {
                             "x is Alice's chosen blind factor".to_string(),
                             "Unblinding: proof = C * x^-1".to_string(),
                         ],
+                        actor: None,
                     },
                 ],
             },
@@ -192,6 +195,7 @@ impl TutorialApp {
                             "Unit stats: HP, Attack, Defense, Speed".to_string(),
                             "Theming abstracted: Knights? Ninjas? Space Marines?".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Alice creates SHA256 commitment of her army composition".to_string(),
@@ -202,16 +206,18 @@ impl TutorialApp {
                             "Prevents army manipulation after seeing opponent".to_string(),
                             "Commitment/reveal scheme ensures fair play".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
-                        description: "Alice publishes KIND 31000 Match Challenge to Nostr".to_string(),
-                        explanation: "Alice broadcasts her challenge to the decentralized Nostr network. This event contains her army commitment, stake amount, and challenge terms. The beauty of Nostr is that this can be created offline and published later - perfect for asynchronous gaming.".to_string(),
-                        action: "📡 Publishing KIND 31000 Match Challenge event...".to_string(),
+                        description: "Alice publishes KIND 21000 Game Challenge to Nostr".to_string(),
+                        explanation: "Alice broadcasts her challenge to the decentralized Nostr network using a custom application event (21000+ range for Manastr). This event contains her army commitment, mana amount, and challenge terms. Each challenge creates a unique event that can be referenced by other players.".to_string(),
+                        action: "📡 Publishing KIND 21000 Game Challenge event...".to_string(),
                         technical_notes: vec![
                             "Event includes: army_commitment, stake, terms".to_string(),
                             "Cryptographically signed by Alice's key".to_string(),
                             "Can be created offline, published later".to_string(),
                         ],
+                        actor: None,
                     },
                 ],
             },
@@ -228,6 +234,7 @@ impl TutorialApp {
                             "Multiple Game Engines can process same events".to_string(),
                             "Services run concurrently, asynchronously".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Game Engine validates challenge format and updates state to CHALLENGED".to_string(),
@@ -238,6 +245,7 @@ impl TutorialApp {
                             "State transition: NONE → CHALLENGED".to_string(),
                             "Engine cannot manipulate player commitments".to_string(),
                         ],
+                        actor: None,
                     },
                 ],
             },
@@ -254,6 +262,7 @@ impl TutorialApp {
                             "Independent C values for Bob".to_string(),
                             "Deterministic for testing, random in production".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Bob generates his army and creates commitment".to_string(),
@@ -264,16 +273,18 @@ impl TutorialApp {
                             "Independent commitment: SHA256(bob_army + nonce)".to_string(),
                             "Both armies now committed but secret".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
-                        description: "Bob publishes KIND 31001 Match Acceptance to Nostr".to_string(),
-                        explanation: "Bob accepts Alice's challenge by publishing his own Nostr event. This contains his army commitment and confirms his stake. The match is now officially accepted and both players have committed armies.".to_string(),
-                        action: "📡 Publishing KIND 31001 Match Acceptance...".to_string(),
+                        description: "Bob publishes KIND 21001 Game Acceptance to Nostr".to_string(),
+                        explanation: "Bob accepts Alice's challenge by publishing his own Nostr event. This contains his army commitment and confirms his mana amount. The event references Alice's challenge via an 'e' tag - now both players have committed armies and the match is official.".to_string(),
+                        action: "📡 Publishing KIND 21001 Game Acceptance...".to_string(),
                         technical_notes: vec![
                             "References Alice's challenge event ID".to_string(),
                             "Contains Bob's army commitment".to_string(),
                             "Confirms stake matching Alice's terms".to_string(),
                         ],
+                        actor: None,
                     },
                 ],
             },
@@ -290,6 +301,7 @@ impl TutorialApp {
                             "Game Engine processes at its own pace".to_string(),
                             "Cryptographic integrity maintained throughout".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Game Engine processes both events and updates state to ACCEPTED".to_string(),
@@ -300,6 +312,7 @@ impl TutorialApp {
                             "State transition: NONE → CHALLENGED → ACCEPTED".to_string(),
                             "Both army commitments now locked in".to_string(),
                         ],
+                        actor: None,
                     },
                 ],
             },
@@ -308,24 +321,26 @@ impl TutorialApp {
                 actor: Actor::Alice,
                 steps: vec![
                     TutorialStep {
-                        description: "Alice reveals her actual Cashu tokens via KIND 31002".to_string(),
+                        description: "Alice reveals her actual Cashu tokens via KIND 21002".to_string(),
                         explanation: "Now Alice must reveal her actual Cashu tokens that were used to generate her army. This allows the Game Engine to verify that her army commitment was generated honestly from real C values, not fabricated.".to_string(),
-                        action: "🎫 Publishing KIND 31002 Token Reveal...".to_string(),
+                        action: "🎫 Publishing KIND 21002 Token Reveal...".to_string(),
                         technical_notes: vec![
                             "Reveals: token proofs, C values, x values".to_string(),
                             "Allows army verification without revealing units".to_string(),
                             "Prevents fake army commitments".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
-                        description: "Bob reveals his actual Cashu tokens via KIND 31002".to_string(),
+                        description: "Bob reveals his actual Cashu tokens via KIND 21002".to_string(),
                         explanation: "Bob follows the same process, revealing his Cashu tokens. Both players have now provided the cryptographic proofs needed for the Game Engine to verify their armies were generated fairly.".to_string(),
-                        action: "🎫 Bob publishing KIND 31002 Token Reveal...".to_string(),
+                        action: "🎫 Bob publishing KIND 21002 Token Reveal...".to_string(),
                         technical_notes: vec![
                             "Bob's token revelation follows same format".to_string(),
                             "Both players now have verifiable armies".to_string(),
                             "Game Engine can re-generate armies to check".to_string(),
                         ],
+                        actor: Some(Actor::Bob),
                     },
                     TutorialStep {
                         description: "Game Engine verifies tokens and re-generates armies".to_string(),
@@ -336,6 +351,7 @@ impl TutorialApp {
                             "Re-generates armies from C values".to_string(),
                             "Verifies: generated_army_hash == commitment".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Match state updated to IN_COMBAT - battle begins!".to_string(),
@@ -346,6 +362,7 @@ impl TutorialApp {
                             "Both armies verified and ready".to_string(),
                             "Combat can proceed with anti-cheat guarantees".to_string(),
                         ],
+                        actor: None,
                     },
                 ],
             },
@@ -354,44 +371,37 @@ impl TutorialApp {
                 actor: Actor::Alice,
                 steps: vec![
                     TutorialStep {
-                        description: "Alice (challenger) commits to her moves for Round 1".to_string(),
-                        explanation: "Combat uses the same commitment/reveal pattern. Alice chooses tactical moves for each of her units and commits to them with SHA256. This prevents her from changing moves after seeing Bob's commitment - ensuring fair tactical play.".to_string(),
-                        action: "🎲 Creating SHA256 commitment of combat moves...".to_string(),
+                        description: "Alice (challenger) publishes her move via KIND 21003".to_string(),
+                        explanation: "Combat uses turn-based system with event chaining. Alice goes first as the challenger and publishes her tactical moves directly to Nostr. Each move event references the previous event hash, creating an immutable chain that prevents tampering and ensures chronological order.".to_string(),
+                        action: "⚔️ Publishing KIND 21003 Combat Move...".to_string(),
                         technical_notes: vec![
                             "Challenger (Alice) always moves first".to_string(),
-                            "move_commit = SHA256(unit_moves + nonce)".to_string(),
-                            "Prevents move manipulation after seeing opponent".to_string(),
+                            "Event references previous game event hash".to_string(),
+                            "Turn-based system with event chaining".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
-                        description: "Bob sees Alice's commitment and commits to his counter-moves".to_string(),
-                        explanation: "Bob receives Alice's move commitment and must commit to his own moves. He can see that Alice has committed to something, but not what those moves are. This creates a simultaneous-play effect even in an asynchronous system.".to_string(),
-                        action: "🎯 Bob committing to counter-moves...".to_string(),
+                        description: "Bob responds with his counter-move via KIND 21003".to_string(),
+                        explanation: "Bob sees Alice's move and publishes his response. His event references Alice's move event hash, maintaining the chronological chain. This turn-based approach allows strategic responses while preserving the immutable event history for validation.".to_string(),
+                        action: "🛡️ Bob publishing KIND 21003 Counter-Move...".to_string(),
                         technical_notes: vec![
-                            "Bob's commitment may reference Alice's commitment".to_string(),
-                            "Creates simultaneous play in async environment".to_string(),
-                            "Both players locked into their tactical decisions".to_string(),
+                            "References Alice's move event hash".to_string(),
+                            "Maintains chronological event chain".to_string(),
+                            "Turn-based tactical gameplay".to_string(),
                         ],
+                        actor: Some(Actor::Bob),
                     },
                     TutorialStep {
-                        description: "Both players reveal their moves via KIND 31004".to_string(),
-                        explanation: "With both players committed to their moves, they now reveal the actual moves via KIND 31004 events. This completes the commitment/reveal cycle that prevents cheating - neither player could change their moves after seeing the opponent's commitment.".to_string(),
-                        action: "🔓 Publishing KIND 31004 Move Reveal events...".to_string(),
+                        description: "🌀🌀🌀 Game Engine processes the combat round".to_string(),
+                        explanation: "The Game Engine validates the event chain and executes the combat round using shared game engine logic. It processes Alice's move, then Bob's counter-move, calculating damage and effects. The chronological event chain ensures fair play without complex commitment schemes.".to_string(),
+                        action: "🌀 Processing combat round with event chain validation...".to_string(),
                         technical_notes: vec![
-                            "Alice publishes KIND 31004 with actual moves".to_string(),
-                            "Bob publishes KIND 31004 with actual moves".to_string(),
-                            "Game Engine can now verify moves match commitments".to_string(),
+                            "Validates event chain chronological order".to_string(),
+                            "Executes combat with shared game engine logic".to_string(),
+                            "Updates unit states and round results".to_string(),
                         ],
-                    },
-                    TutorialStep {
-                        description: "Game Engine verifies and executes combat round".to_string(),
-                        explanation: "The Game Engine verifies that revealed moves match the previous commitments (anti-cheat), then executes the combat round using shared WASM logic. This ensures identical game state calculation between client and server. This process repeats for each combat round.".to_string(),
-                        action: "⚡ Executing combat round with shared game logic...".to_string(),
-                        technical_notes: vec![
-                            "Verifies: revealed_moves_hash == commitment".to_string(),
-                            "Uses shared WASM for identical client/server logic".to_string(),
-                            "Updates unit health, positions, status".to_string(),
-                        ],
+                        actor: Some(Actor::GameEngine),
                     },
                 ],
             },
@@ -408,16 +418,18 @@ impl TutorialApp {
                             "Calculates: winner, final HP, casualties".to_string(),
                             "Local calculation should match server".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
-                        description: "Alice publishes KIND 31005 Match Result".to_string(),
+                        description: "Alice publishes KIND 21004 Match Result".to_string(),
                         explanation: "Alice publishes her calculated match result to Nostr. This includes the winner determination and final game state. Her signature proves she agrees to this outcome - critical for the validation phase.".to_string(),
-                        action: "📡 Publishing KIND 31005 with match outcome...".to_string(),
+                        action: "📡 Publishing KIND 21004 with match outcome...".to_string(),
                         technical_notes: vec![
                             "Contains: winner, final_state, signature".to_string(),
                             "Cryptographic agreement to outcome".to_string(),
                             "Required for Game Engine validation".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Bob calculates and submits his match result".to_string(),
@@ -428,6 +440,7 @@ impl TutorialApp {
                             "Both signatures required for validation".to_string(),
                             "Disagreement triggers dispute handling".to_string(),
                         ],
+                        actor: Some(Actor::Bob),
                     },
                 ],
             },
@@ -444,6 +457,7 @@ impl TutorialApp {
                             "Processes all events chronologically".to_string(),
                             "Independent calculation of final state".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Game Engine verifies outcome matches player submissions".to_string(),
@@ -454,6 +468,7 @@ impl TutorialApp {
                             "Validates entire cryptographic chain".to_string(),
                             "Proves zero-coordination gaming worked".to_string(),
                         ],
+                        actor: None,
                     },
                 ],
             },
@@ -470,6 +485,7 @@ impl TutorialApp {
                             "Burns both Alice's and Bob's staked tokens".to_string(),
                             "Prevents double-spending of game tokens".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
                         description: "Game Engine mints loot tokens for the winner".to_string(),
@@ -480,16 +496,18 @@ impl TutorialApp {
                             "190 tokens to Alice, 10 to system".to_string(),
                             "Tokens locked to winner's npub pubkey".to_string(),
                         ],
+                        actor: None,
                     },
                     TutorialStep {
-                        description: "Game Engine publishes KIND 31006 Loot Distribution".to_string(),
-                        explanation: "The Game Engine publishes the final authoritative event - KIND 31006 Loot Distribution. This is the only event the Game Engine authoritatively creates, containing the official match outcome and economic distribution. Zero-coordination gaming is complete!".to_string(),
+                        description: "🌀🌀🌀 Game Engine publishes KIND 21005 Loot Distribution".to_string(),
+                        explanation: "The Game Engine publishes the final authoritative event - KIND 21005 Loot Distribution. This is the only event the Game Engine authoritatively creates, containing the official match outcome and economic distribution. Zero-coordination gaming is complete!".to_string(),
                         action: "📡 Publishing authoritative loot distribution...".to_string(),
                         technical_notes: vec![
                             "Only authoritative event from Game Engine".to_string(),
                             "Contains: winner, loot_tokens, distribution".to_string(),
                             "Completes zero-coordination gaming cycle".to_string(),
                         ],
+                        actor: Some(Actor::GameEngine),
                     },
                     TutorialStep {
                         description: "🎉 Welcome to the Real World - Gameplay Client Ready!".to_string(),
@@ -501,6 +519,7 @@ impl TutorialApp {
                             "Full match flow available for testing".to_string(),
                             "Press [P] to launch gameplay client".to_string(),
                         ],
+                        actor: None,
                     },
                 ],
             },
@@ -881,40 +900,19 @@ async fn launch_gameplay_client() -> Result<()> {
     // Launch the gaming wallet demo which connects to the local services
     use std::process::Command;
     
-    let output = Command::new("cargo")
-        .args(["run", "--bin", "gaming-wallet"])
-        .current_dir(".")
-        .output();
-        
-    match output {
-        Ok(result) => {
-            if result.status.success() {
-                println!("{}", String::from_utf8_lossy(&result.stdout));
-                println!();
-                println!("🚀 Welcome to the real world of zero-coordination gaming! 🎮✨");
-                println!();
-                println!("Ready to challenge other players? Your local services are running:");
-                println!("  • Create matches with 'just integration' for full system testing");
-                println!("  • Explore the codebase to build your own client");
-                println!("  • The revolution starts now!");
-            } else {
-                println!("❌ Gaming wallet demo encountered an issue:");
-                println!("{}", String::from_utf8_lossy(&result.stderr));
-                println!();
-                println!("🎯 Don't worry! Your local services are still running.");
-                println!("   Try running 'cargo run --bin gaming-wallet' manually");
-                println!("   or 'just demo' from the project root.");
-            }
-        }
-        Err(e) => {
-            println!("❌ Could not launch gaming wallet: {}", e);
-            println!();
-            println!("🎯 Your local services are running! Try these commands:");
-            println!("   • 'just demo' - Gaming wallet demonstration");
-            println!("   • 'just integration' - Full system integration test");
-            println!("   • Explore the daemons/integration_tests/src/core/ directory");
-        }
-    }
+    // Instead of trying to launch external commands, just show instructions
+    println!("🚀 Welcome to the real world of zero-coordination gaming! 🎮✨");
+    println!();
+    println!("Ready to challenge other players? Your local services should be running:");
+    println!("  • Create matches with 'just integration' for full system testing");
+    println!("  • Try 'just demo' for gaming wallet demonstration");
+    println!("  • Explore the daemons/integration_tests/src/core/ directory");
+    println!();
+    println!("💡 To start services if not running:");
+    println!("  • Run 'just dev' from the project root");
+    println!("  • Or start individual services as needed");
+    println!();
+    println!("The revolution starts now! The Matrix has been shattered. 🌟");
     
     Ok(())
 }
@@ -1034,7 +1032,10 @@ fn draw_tutorial_ui(f: &mut Frame, app: &TutorialApp) {
 
 fn draw_header(f: &mut Frame, area: Rect, app: &TutorialApp) {
     let current_phase = app.current_phase();
-    let actor = &current_phase.actor;
+    let current_step = app.current_step();
+    
+    // Use step-specific actor if available, otherwise use phase actor
+    let actor = current_step.actor.as_ref().unwrap_or(&current_phase.actor);
     
     let header_text = format!(
         "{} {} - {} | Actor: {} {}",
