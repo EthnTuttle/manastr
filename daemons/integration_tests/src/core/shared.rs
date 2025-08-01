@@ -4,7 +4,7 @@ use nostr_sdk::Client as NostrClient;
 use reqwest::Client;
 use sha2::{Digest, Sha256};
 use shared_game_logic::commitment::*;
-use shared_game_logic::generate_army_from_cashu_c_value;
+
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, info};
@@ -15,7 +15,7 @@ use crate::matches::{
 use crate::players::TestPlayer;
 use crate::utils::generate_nonce;
 
-use super::gaming_wallet::{extract_c_value_bytes, GamingWallet};
+use super::gaming_wallet::GamingWallet;
 
 /// Core test suite functionality shared across all test modules
 #[derive(Debug)]
@@ -159,22 +159,11 @@ impl TestSuiteCore {
             .collect();
         let token_commitment = commit_to_cashu_tokens(&token_secrets, &player.token_nonce);
 
-        let c_value_bytes = extract_c_value_bytes(&gaming_tokens);
-        let wager_armies: Vec<_> = c_value_bytes
-            .iter()
-            .take(wager_amount as usize)
-            .map(|c_bytes| generate_army_from_cashu_c_value(c_bytes, league_id))
-            .collect();
-
-        let army_data = format!("armies_{}_league_{}", wager_armies.len(), league_id);
-        let army_commitment = commit_to_army(&army_data, &player.army_nonce);
-
         let challenge_data = MatchChallenge {
             challenger_npub: player.public_key.to_string(),
             wager_amount,
             league_id,
             cashu_token_commitment: token_commitment,
-            army_commitment,
             expires_at: (chrono::Utc::now().timestamp() + 3600) as u64,
             created_at: chrono::Utc::now().timestamp() as u64,
             match_event_id: String::new(),
@@ -191,7 +180,6 @@ impl TestSuiteCore {
             wager_amount,
             league_id,
             cashu_token_commitment: challenge_data.cashu_token_commitment,
-            army_commitment: challenge_data.army_commitment,
             expires_at: challenge_data.expires_at,
             created_at: challenge_data.created_at,
             match_event_id: real_event_id.to_hex(),
@@ -221,25 +209,10 @@ impl TestSuiteCore {
             .collect();
         let token_commitment = commit_to_cashu_tokens(&token_secrets, &player.token_nonce);
 
-        let c_value_bytes = extract_c_value_bytes(&gaming_tokens);
-        let acceptor_armies: Vec<_> = c_value_bytes
-            .iter()
-            .take(challenge.wager_amount as usize)
-            .map(|c_bytes| generate_army_from_cashu_c_value(c_bytes, challenge.league_id))
-            .collect();
-
-        let army_data = format!(
-            "armies_{}_league_{}",
-            acceptor_armies.len(),
-            challenge.league_id
-        );
-        let army_commitment = commit_to_army(&army_data, &player.army_nonce);
-
         let acceptance = MatchAcceptance {
             acceptor_npub: player.public_key.to_string(),
             match_event_id: challenge.match_event_id.clone(),
             cashu_token_commitment: token_commitment,
-            army_commitment,
             accepted_at: chrono::Utc::now().timestamp() as u64,
         };
 

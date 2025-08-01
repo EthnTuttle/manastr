@@ -8,7 +8,6 @@ pub struct MatchChallenge {
     pub wager_amount: u64,
     pub league_id: u8,
     pub cashu_token_commitment: String,
-    pub army_commitment: String,
     pub expires_at: u64,
     pub created_at: u64,
     pub match_event_id: String,
@@ -20,7 +19,6 @@ pub struct MatchAcceptance {
     pub acceptor_npub: String,
     pub match_event_id: String,
     pub cashu_token_commitment: String,
-    pub army_commitment: String,
     pub accepted_at: u64,
 }
 
