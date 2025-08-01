@@ -90,7 +90,7 @@ impl PlayerDrivenTestSuite {
         
         // Wait for Cashu mint
         for attempt in 1..=30 {
-            match self.http_client.get(&format!("{}/health", self.mint_url)).send().await {
+            match self.http_client.get(&format!("{}/v1/info", self.mint_url)).send().await {
                 Ok(response) if response.status().is_success() => {
                     info!("✅ Cashu Mint ready");
                     break;

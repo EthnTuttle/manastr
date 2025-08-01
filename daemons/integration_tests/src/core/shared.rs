@@ -54,7 +54,7 @@ impl TestSuiteCore {
         for attempt in 1..=30 {
             match self
                 .http_client
-                .get(format!("{}/health", self.mint_url))
+                .get(format!("{}/v1/info", self.mint_url))
                 .send()
                 .await
             {

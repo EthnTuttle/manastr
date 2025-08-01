@@ -411,13 +411,21 @@ impl IntegrationRunner {
             }
         }
 
-        // Clean up log files
-        let _ = tokio::fs::remove_file("logs/cdk-mint.out.log").await;
-        let _ = tokio::fs::remove_file("logs/cdk-mint.err.log").await;
-        let _ = tokio::fs::remove_file("logs/game-engine.out.log").await;
-        let _ = tokio::fs::remove_file("logs/game-engine.err.log").await;
-        let _ = tokio::fs::remove_file("logs/nostr-relay.out.log").await;
-        let _ = tokio::fs::remove_file("logs/nostr-relay.err.log").await;
+        // Preserve log files for troubleshooting - add timestamp to keep them
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        
+        // Move logs to timestamped files instead of deleting them
+        let _ = tokio::fs::rename("logs/cdk-mint.out.log", format!("logs/cdk-mint.out.{}.log", timestamp)).await;
+        let _ = tokio::fs::rename("logs/cdk-mint.err.log", format!("logs/cdk-mint.err.{}.log", timestamp)).await;
+        let _ = tokio::fs::rename("logs/game-engine.out.log", format!("logs/game-engine.out.{}.log", timestamp)).await;
+        let _ = tokio::fs::rename("logs/game-engine.err.log", format!("logs/game-engine.err.{}.log", timestamp)).await;
+        let _ = tokio::fs::rename("logs/nostr-relay.out.log", format!("logs/nostr-relay.out.{}.log", timestamp)).await;
+        let _ = tokio::fs::rename("logs/nostr-relay.err.log", format!("logs/nostr-relay.err.{}.log", timestamp)).await;
+        
+        info!("📁 Log files preserved with timestamp {} for troubleshooting", timestamp);
 
         info!("✅ All services stopped and cleaned up");
         Ok(())
