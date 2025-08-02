@@ -168,6 +168,13 @@ impl IntegrationRunner {
     async fn start_cashu_mint(&mut self) -> Result<()> {
         info!("🪙 Starting pre-built CDK Cashu Mint");
 
+        // Clean up mint database to avoid "already signed" errors between test runs
+        let mint_db_dir = std::path::Path::new(&std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string())).join(".cdk-mintd");
+        if mint_db_dir.exists() {
+            info!("🧹 Cleaning up mint database directory: {:?}", mint_db_dir);
+            std::fs::remove_dir_all(&mint_db_dir).context("Failed to remove mint database directory")?;
+        }
+
         // Create logs directory
         std::fs::create_dir_all("logs").context("Failed to create logs directory")?;
 

@@ -7,6 +7,7 @@ use crate::core::edge_cases::test_edge_cases;
 use crate::core::happy_path::test_happy_path_match;
 use crate::core::stress::test_stress_scenarios;
 use crate::core::TestSuiteCore;
+use crate::gaming_auth_test::test_gaming_authorization;
 
 /// Main test suite for player-driven integration tests
 ///
@@ -50,6 +51,9 @@ impl PlayerDrivenTestSuite {
 
         info!("📋 Test 5: High-Volume Match Processing");
         test_stress_scenarios(&self.core).await?;
+
+        info!("📋 Test 6: Gaming Token Authorization Enforcement");
+        test_gaming_authorization().await?;
 
         info!("✅ All Player-Driven Integration Tests Passed!");
         Ok(())

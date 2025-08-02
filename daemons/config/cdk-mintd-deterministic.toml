@@ -19,6 +19,25 @@ mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon aban
 input_fee_ppk = 0
 enable_swagger_ui = true
 
+# Gaming Token Authorization System
+# NOTE: Full implementation requires extending CDK with unit-specific authorization
+# Current approach: Document intended authorization model for future implementation
+# 
+# INTENDED AUTHORIZATION RULES:
+# 1. MANA TOKENS:
+#    - ✅ Anyone can mint mana (pay-to-mint model)
+#    - ❌ Only Game Engine can melt mana (burn after matches)
+#    - ❌ Mana cannot be swapped between users (gaming integrity)
+# 
+# 2. LOOT TOKENS:
+#    - ❌ Only Game Engine can mint loot (95% player rewards)
+#    - ✅ Loot can be freely transferred/swapped (player ownership)
+#
+# TODO: Implement CDK extension for unit-specific authorization:
+# - Extend authorization middleware to check currency unit + caller identity
+# - Add Game Engine Nostr signature verification
+# - Implement unit-specific endpoint protection
+
 [mint_management_rpc]
 enabled = false
 
@@ -50,7 +69,7 @@ max_melt = 1000000
 [fake_wallet]
 # Fake Lightning backend optimized for gaming integration tests
 # Support dual currency system for gaming: mana (gameplay) and loot (rewards)
-supported_units = ["mana", "loot"]
+supported_units = ["sat", "mana", "loot"]
 fee_percent = 0.01  # 1% fee for testing
 reserve_fee_min = 1  # Minimum 1 unit reserve
 # Minimal delays for fast testing

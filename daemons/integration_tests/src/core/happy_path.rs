@@ -35,8 +35,8 @@ pub async fn test_happy_path_match(core: &TestSuiteCore) -> Result<()> {
         .await?;
     info!("📋 Phase 4 Complete: Both players revealed Cashu tokens for army verification");
 
-    // Phase 5: Combat Rounds
-    core.simulate_combat_rounds(&player1, &player2, &challenge.match_event_id, 3)
+    // Phase 5: Combat Rounds  
+    core.execute_combat_rounds(&player1, &player2, &challenge.match_event_id, 3)
         .await?;
     info!("📋 Phase 5 Complete: 3 combat rounds with turn-based moves and event chaining");
 

@@ -29,9 +29,10 @@ sha2 = { workspace = true }
 rand = { workspace = true }
 futures = { workspace = true }
 hex = { workspace = true }
-cdk = { workspace = true }
-cdk-fake-wallet = { workspace = true }
-cdk-sqlite = { workspace = true }
+# Use direct paths to CDK submodule to avoid version issues
+cdk = { path = "../cdk/crates/cdk" }
+cdk-fake-wallet = { path = "../cdk/crates/cdk-fake-wallet" }
+cdk-sqlite = { path = "../cdk/crates/cdk-sqlite" }
 
 # TUI dependencies for tutorial mode
 ratatui = "0.28"

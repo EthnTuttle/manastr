@@ -4,6 +4,7 @@
 // truly decentralized multiplayer gaming system.
 
 pub mod core;
+pub mod gaming_auth_test;
 pub mod matches;
 pub mod players;
 pub mod test_suite;

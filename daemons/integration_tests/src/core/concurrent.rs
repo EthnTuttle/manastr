@@ -55,7 +55,7 @@ async fn process_concurrent_match(
         .await?;
 
     // Combat rounds
-    core.simulate_combat_rounds(&player1, &player2, &challenge.match_event_id, 2)
+    core.execute_combat_rounds(&player1, &player2, &challenge.match_event_id, 2)
         .await?;
 
     // Match results
