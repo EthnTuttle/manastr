@@ -487,6 +487,7 @@ async fn main() -> Result<()> {
         Some("--tutorial") => run_tutorial_mode().await,
         Some("--debug") => run_debug_mode().await,
         Some("--gui") => run_gui_mode().await,
+        Some("--bevy") => run_bevy_mode().await,
         Some("--help") | Some("-h") => {
             print_help();
             Ok(())
@@ -509,7 +510,8 @@ fn print_help() {
     println!("OPTIONS:");
     println!("  --tutorial    Run interactive tutorial mode with ratatui TUI");
     println!("  --debug       Run with detailed console logging");
-    println!("  --gui         Start services and launch Trading Card Game interface");
+    println!("  --gui         Start services and launch Trading Card Game interface (iced.rs)");
+    println!("  --bevy        Start services and launch Professional Game Engine (Bevy)");
     println!("  --help, -h    Show this help message");
     println!();
     println!("DEFAULT:");
@@ -586,6 +588,66 @@ async fn run_gui_mode() -> Result<()> {
         }
         Err(e) => {
             Err(e).context("Failed to run Trading Card Game interface")
+        }
+    }
+}
+
+/// Start services and launch Professional Bevy Game Engine interface
+async fn run_bevy_mode() -> Result<()> {
+    // Initialize tracing for Bevy mode
+    tracing_subscriber::fmt()
+        .with_env_filter("info")
+        .init();
+
+    info!("🎮 BEVY MODE: Starting services and launching Professional Game Engine interface");
+    
+    // Start all services
+    let mut runner = IntegrationRunner::new();
+    runner.add_cashu_mint()
+        .add_game_engine()
+        .add_nostr_relay();
+
+    // Disable automatic cleanup - we want to control when services stop
+    runner.cleanup_on_drop = false;
+
+    runner.start_all_services().await
+        .context("Failed to start backend services")?;
+
+    info!("✅ All services ready! Launching Professional Game Engine interface...");
+    
+    // Launch the Bevy interface
+    let bevy_result = Command::new("cargo")
+        .args(&["run", "--bin", "manastr-bevy"])
+        .current_dir("../../")  // Go to workspace root
+        .status()
+        .context("Failed to launch Professional Game Engine interface");
+
+    // Clean up services after Bevy GUI exits
+    info!("🧹 Professional Game Engine interface closed. Cleaning up services...");
+    
+    // Manually kill all running processes
+    for service in &mut runner.services {
+        if let Some(ref mut process) = service.process {
+            if let Err(e) = process.kill() {
+                warn!("Failed to kill {}: {}", service.name, e);
+            } else {
+                info!("✅ Stopped {}", service.name);
+            }
+        }
+    }
+    
+    // Check if Bevy launched successfully
+    match bevy_result {
+        Ok(status) if status.success() => {
+            info!("✅ Professional gaming session completed successfully!");
+            Ok(())
+        }
+        Ok(status) => {
+            warn!("⚠️ Professional Game Engine exited with status: {}", status);
+            Ok(())
+        }
+        Err(e) => {
+            Err(e).context("Failed to run Professional Game Engine interface")
         }
     }
 }
