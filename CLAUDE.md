@@ -11,6 +11,7 @@
 ```
 manastr/
 ├── docs/                    # ✅ Complete - Revolutionary player-driven architecture
+│   └── TRADING_CARD_GAME_INTERFACE.md  # 🎮 iced.rs TCG interface design
 ├── daemons/                 # ✅ Implemented - Pure validation backend services
 │   ├── game-engine-bot/     # ✅ Player-driven match validator with anti-cheat
 │   ├── shared-game-logic/   # ✅ WASM-compatible deterministic game logic
@@ -229,3 +230,26 @@ This principle ensures integration tests validate the complete production system
 ---
 
 **Status**: Revolutionary zero-coordination multiplayer gaming architecture **COMPLETE AND OPERATIONAL** with canonical reference implementation! 🎮✨
+
+## 🎮 Next Phase: Interactive Trading Card Game Interface
+
+**COMPLETED**: iced.rs-based TCG interface operational with `just play` command:
+- **Educational Gaming**: Transform technical operations into intuitive card game mechanics
+- **Dual-Player Control**: Play both sides of a match interactively through the 9-phase flow
+- **Service Orchestration**: Automatic backend startup, health checking, and cleanup
+- **Real Backend Integration**: All game actions execute authentic Nostr/CDK operations
+- **One-Command Gaming**: Complete experience via `just play`
+
+## 🚀 STRATEGIC EVOLUTION: BEVY + MATCHBOX INTEGRATION
+
+**Next Phase**: Professional game engine upgrade while preserving all cryptographic security:
+
+**New Architecture**:
+- **Foundation**: Keep all Manastr security (Nostr events, commitment/reveal, Cashu tokens)
+- **Engine**: Replace iced.rs with Bevy for professional game capabilities  
+- **Networking**: Add matchbox_nostr for WebRTC P2P with graceful Nostr fallback
+- **UI**: Implement bevy_lunex responsive layouts for modern interface design
+
+**Strategic Document**: `BEVY_INTEGRATION_STRATEGY.md` - Complete implementation roadmap
+
+**Revolutionary Outcome**: World's first secure + responsive decentralized game that rivals centralized alternatives in UX while surpassing them in security and player ownership.

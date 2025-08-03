@@ -106,6 +106,21 @@ integration:
     @echo ""
     cd daemons/integration_tests && cargo run --bin integration-runner
 
+# 🎮 INTERACTIVE GAMING SESSION - Start services and launch TCG interface
+play:
+    @echo "🎮 LAUNCHING MANASTR TRADING CARD GAME INTERFACE"
+    @echo "==============================================="
+    @echo ""
+    @echo "This will:"
+    @echo "  1. 🏗️  Start all backend services (CDK, Nostr, Game Engine)"
+    @echo "  2. ⏳  Wait for services to be ready"
+    @echo "  3. 🎯  Launch the Trading Card Game interface"
+    @echo "  4. 🧹  Clean up all services when GUI exits"
+    @echo ""
+    @echo "🚀 Starting interactive gaming session..."
+    @echo ""
+    cd daemons/integration_tests && cargo run --bin integration-runner -- --gui
+
 # Format all Rust code
 fmt:
     @echo "📝 Formatting Rust code..."
@@ -268,3 +283,6 @@ claude-help:
     @echo "  • README.md - Getting started guide"
     @echo ""
     @echo "🎯 For Claude Code users: Run 'just exit-matrix' to experience the revolution!"
+    @echo ""
+    @echo "🚀 STRATEGIC EVOLUTION:"
+    @echo "  BEVY_INTEGRATION_STRATEGY.md  # Complete roadmap for professional game engine upgrade"

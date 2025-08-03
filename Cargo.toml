@@ -4,6 +4,8 @@ members = [
     "daemons/shared-game-logic",
     "daemons/game-engine-bot",
     "daemons/integration_tests",
+    "daemons/manastr-tcg",
+    "daemons/manastr-bevy",
 ]
 
 # Exclude external dependencies and submodules
