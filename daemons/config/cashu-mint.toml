@@ -2,9 +2,9 @@
 # Full-featured mint with fake Lightning backend for testing
 
 [info]
-url = "http://127.0.0.1:3333/"
+url = "http://127.0.0.1:3334/"
 listen_host = "127.0.0.1"
-listen_port = 3333
+listen_port = 3334
 mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 # Small input fee for testing
 input_fee_ppk = 0

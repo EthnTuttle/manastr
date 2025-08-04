@@ -3,11 +3,11 @@ host = "127.0.0.1"
 port = 4444
 
 [nostr]
-relay_url = "ws://localhost:7777"
+relay_url = "ws://127.0.0.1:7777"
 private_key = "0000000000000000000000000000000000000000000000000000000000000002"
 
 [cashu]
-mint_url = "http://localhost:3333"
+mint_url = "http://127.0.0.1:3333"
 
 [game]
 max_concurrent_matches = 10

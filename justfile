@@ -121,27 +121,6 @@ play:
     @echo ""
     cd daemons/integration_tests && cargo run --bin integration-runner -- --gui
 
-# 🏛️ PROFESSIONAL GAMING SESSION - Start services and launch Bevy Game Engine
-bevy:
-    @echo "🏛️ LAUNCHING MANASTR PROFESSIONAL GAME ENGINE"
-    @echo "============================================="
-    @echo ""
-    @echo "Revolutionary Bevy + Matchbox hybrid networking architecture:"
-    @echo "  1. 🏗️  Start all backend services (CDK, Nostr, Game Engine)"
-    @echo "  2. ⏳  Wait for services to be ready" 
-    @echo "  3. 🎮  Launch Professional Game Engine interface (Bevy)"
-    @echo "  4. 🌐  Enable hybrid Nostr + WebRTC coordination"
-    @echo "  5. 🧹  Clean up all services when interface exits"
-    @echo ""
-    @echo "Features:"
-    @echo "  • Professional game engine capabilities"
-    @echo "  • Modern responsive UI with bevy_lunex (pending)"
-    @echo "  • Real-time P2P coordination via WebRTC"
-    @echo "  • All revolutionary security guarantees preserved"
-    @echo ""
-    @echo "🚀 Starting professional gaming session..."
-    @echo ""
-    cd daemons/integration_tests && cargo run --bin integration-runner -- --bevy
 
 # Format all Rust code
 fmt:
