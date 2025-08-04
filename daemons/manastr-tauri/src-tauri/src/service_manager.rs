@@ -1,5 +1,6 @@
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
+use tokio::io::AsyncBufReadExt;
 use std::collections::HashMap;
 use std::process::{Child, Command, Stdio};
 use std::sync::Arc;
@@ -522,55 +523,104 @@ impl NostrRelayService {
     }
 }
 
-/// Run the integrated Nostr relay service (external process due to SQLite version conflicts)
+/// Run the integrated Nostr relay service with managed subprocess approach
 async fn run_integrated_nostr_relay(status_tx: mpsc::UnboundedSender<ServiceMessage>) -> Result<()> {
     use std::path::Path;
     
     let _ = status_tx.send(ServiceMessage::LogMessage {
         service: "Nostr Relay".to_string(),
-        message: "Starting Nostr relay with external process (SQLite version compatibility)...".to_string(),
+        message: "Starting Nostr relay with managed subprocess integration...".to_string(),
     });
     
     // Create required directories
     std::fs::create_dir_all("../../nostr-relay/logs").ok();
     std::fs::create_dir_all("../../nostr-relay/nostr-relay-db").ok();
     
-    let _ = status_tx.send(ServiceMessage::LogMessage {
-        service: "Nostr Relay".to_string(),
-        message: "Building Nostr relay binary...".to_string(),
-    });
+    // Check if binary already exists to skip rebuild
+    let binary_path = Path::new("../../nostr-relay/nostr-rs-relay/target/release/nostr-rs-relay");
     
-    // Build the Nostr relay
-    let build_output = tokio::process::Command::new("cargo")
-        .args(&["build", "--release"])
-        .current_dir("../../nostr-relay/nostr-rs-relay")
-        .output()
-        .await?;
+    if !binary_path.exists() {
+        let _ = status_tx.send(ServiceMessage::LogMessage {
+            service: "Nostr Relay".to_string(),
+            message: "Building Nostr relay binary...".to_string(),
+        });
         
-    if !build_output.status.success() {
-        let error = String::from_utf8_lossy(&build_output.stderr);
-        return Err(anyhow!("Nostr relay build failed: {}", error));
+        // Build the Nostr relay
+        let build_output = tokio::process::Command::new("cargo")
+            .args(&["build", "--release"])
+            .current_dir("../../nostr-relay/nostr-rs-relay")
+            .output()
+            .await?;
+            
+        if !build_output.status.success() {
+            let error = String::from_utf8_lossy(&build_output.stderr);
+            return Err(anyhow!("Nostr relay build failed: {}", error));
+        }
+        
+        let _ = status_tx.send(ServiceMessage::LogMessage {
+            service: "Nostr Relay".to_string(),
+            message: "Nostr relay binary built successfully".to_string(),
+        });
+    } else {
+        let _ = status_tx.send(ServiceMessage::LogMessage {
+            service: "Nostr Relay".to_string(),
+            message: "Using existing Nostr relay binary".to_string(),
+        });
     }
     
     let _ = status_tx.send(ServiceMessage::LogMessage {
         service: "Nostr Relay".to_string(),
-        message: "Nostr relay binary built successfully".to_string(),
+        message: "Starting Nostr relay with enhanced monitoring...".to_string(),
     });
     
-    // Run the relay binary
+    // Run the relay binary with enhanced monitoring and cleanup
     let mut child = tokio::process::Command::new("./nostr-rs-relay/target/release/nostr-rs-relay")
         .args(&["--config", "config.toml"])
         .current_dir("../../nostr-relay")
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
+        .kill_on_drop(true) // Ensure process is killed when dropped
         .spawn()?;
     
     let _ = status_tx.send(ServiceMessage::LogMessage {
         service: "Nostr Relay".to_string(),
-        message: "Nostr relay process started".to_string(),
+        message: "Nostr relay process started with enhanced management".to_string(),
     });
     
-    // Monitor the process
+    // Enhanced monitoring with output streaming
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
+    
+    // Spawn tasks to read stdout/stderr and relay to status channel
+    if let Some(stdout) = stdout {
+        let status_tx_clone = status_tx.clone();
+        tokio::spawn(async move {
+            let reader = tokio::io::BufReader::new(stdout);
+            let mut lines = reader.lines();
+            while let Ok(Some(line)) = lines.next_line().await {
+                let _ = status_tx_clone.send(ServiceMessage::LogMessage {
+                    service: "Nostr Relay".to_string(),
+                    message: format!("STDOUT: {}", line),
+                });
+            }
+        });
+    }
+    
+    if let Some(stderr) = stderr {
+        let status_tx_clone = status_tx.clone();
+        tokio::spawn(async move {
+            let reader = tokio::io::BufReader::new(stderr);
+            let mut lines = reader.lines();
+            while let Ok(Some(line)) = lines.next_line().await {
+                let _ = status_tx_clone.send(ServiceMessage::LogMessage {
+                    service: "Nostr Relay".to_string(),
+                    message: format!("STDERR: {}", line),
+                });
+            }
+        });
+    }
+    
+    // Monitor the process with enhanced error reporting
     let status = child.wait().await?;
     
     if status.success() {
@@ -745,7 +795,7 @@ async fn run_integrated_game_engine(status_tx: mpsc::UnboundedSender<ServiceMess
         },
         nostr: game_engine_bot::config::NostrConfig {
             relay_url: "ws://127.0.0.1:7777".to_string(),
-            private_key: "nsec1ufnus6pju9kf2zkgs4jpts9fzjanrvpjuzflpa9d9jyq9uu5s6j0qvk6dpm".to_string(), // Valid test key
+            private_key: "0000000000000000000000000000000000000000000000000000000000000002".to_string(), // Valid hex test key
         },
         cashu: game_engine_bot::config::CashuConfig {
             mint_url: "http://127.0.0.1:3333".to_string(),

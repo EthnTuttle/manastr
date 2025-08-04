@@ -123,28 +123,29 @@ play:
     @echo ""
     cd daemons/integration_tests && cargo run --bin integration-runner -- --gui
 
-# 🖥️ INTEGRATION DASHBOARD - Tauri + Dioxus dashboard for real-time monitoring
+# 🖥️ INTEGRATION DASHBOARD - Tauri + Dioxus dashboard with service orchestration
 dashboard:
     @echo "🖥️ LAUNCHING MANASTR INTEGRATION DASHBOARD"
     @echo "==========================================="
     @echo ""
-    @echo "Revolutionary Tauri + Dioxus integration dashboard:"
-    @echo "  1. 🏗️  Professional desktop interface with Dioxus"
-    @echo "  2. 📊  Real-time service monitoring and control"
-    @echo "  3. 🎮  Complete integration test suite execution"
-    @echo "  4. 💰  Interactive wallet management (Alice & Bob)"
+    @echo "Revolutionary Tauri + Dioxus integration dashboard with service orchestration:"
+    @echo "  1. 🏗️  Start all background services first (CDK, Nostr, Game Engine)"
+    @echo "  2. 📊  Health check all services before launching dashboard"
+    @echo "  3. 🎮  Professional desktop interface with Dioxus"
+    @echo "  4. 💰  Real-time service monitoring and control"
     @echo "  5. 📋  Live service logs and activity monitoring"
+    @echo "  6. 🛑  Graceful shutdown of all services on exit"
     @echo ""
     @echo "Features:"
+    @echo "  • Rust-based service orchestration with fail-fast behavior"
+    @echo "  • All services started before dashboard launch (no startup race conditions)"
     @echo "  • Native desktop performance with Tauri"
     @echo "  • Reactive UI with Dioxus web framework"
-    @echo "  • Real-time updates every 2 seconds"
-    @echo "  • One-click service management"
-    @echo "  • Complete replication of 'just integration' functionality"
+    @echo "  • Complete process lifecycle management"
     @echo ""
-    @echo "🚀 Starting integration dashboard..."
+    @echo "🚀 Starting service orchestration and dashboard..."
     @echo ""
-    cd daemons/manastr-tauri && cargo tauri dev
+    cd daemons/manastr-tauri/src-tauri && cargo run --bin dashboard-launcher
 
 
 # Format all Rust code

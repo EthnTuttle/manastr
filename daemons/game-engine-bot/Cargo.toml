@@ -23,7 +23,7 @@ nostr = { workspace = true }
 reqwest = { workspace = true }
 
 # Crypto and utilities
-uuid = { workspace = true, features = ["serde"] }
+uuid = { version = "1.12.1", features = ["v4", "serde"] }
 chrono = { workspace = true }
 
 # Configuration and logging

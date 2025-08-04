@@ -4,6 +4,8 @@ use tokio::time::Duration;
 use tracing::{info, warn, error};
 
 mod service_manager;
+pub mod service_orchestrator;
+pub mod integrated_nostr_relay;
 
 use service_manager::{IntegrationData, IntegratedServiceManager};
 

@@ -42,5 +42,8 @@ nostr-sdk = "0.35"
 
 # CDK dependencies - now using direct paths in integration_tests
 
+# SQLite version resolution for compatibility - force all crates to use 0.31
+rusqlite = { version = "0.31", features = ["bundled", "limits", "modern_sqlite", "trace"] }
+
 # Utility dependencies - updated for Bevy 0.16.1 compatibility
-uuid = { version = "1.12.1", features = ["v4"] } 
+uuid = { version = "1.12.1", features = ["v4", "serde"] } 
