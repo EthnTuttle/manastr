@@ -4,6 +4,7 @@ members = [
     "daemons/shared-game-logic",
     "daemons/game-engine-bot",
     "daemons/integration_tests",
+    "daemons/manastr-tauri/src-tauri",
     # "daemons/manastr-bevy",  # Separate workspace - build with 'just bevy'
     # "daemons/manastr-tcg",  # Temporarily excluded for iced compatibility issues
 ]

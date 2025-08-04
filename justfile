@@ -41,8 +41,10 @@ default:
     @echo "  just test          # Run all tests"
     @echo "  just integration   # THE definitive system demonstration"
     @echo ""
-    @echo "🎮 For comprehensive testing:"
-    @echo "  just integration        # Complete service orchestration + game validation"
+    @echo "🎮 Interactive Interfaces:"
+    @echo "  just integration   # Complete service orchestration + game validation"
+    @echo "  just dashboard     # Professional Tauri + Dioxus integration dashboard"
+    @echo "  just play          # Trading card game interface (iced.rs)"
 
 # Build all components in the correct order
 build:
@@ -120,6 +122,29 @@ play:
     @echo "🚀 Starting interactive gaming session..."
     @echo ""
     cd daemons/integration_tests && cargo run --bin integration-runner -- --gui
+
+# 🖥️ INTEGRATION DASHBOARD - Tauri + Dioxus dashboard for real-time monitoring
+dashboard:
+    @echo "🖥️ LAUNCHING MANASTR INTEGRATION DASHBOARD"
+    @echo "==========================================="
+    @echo ""
+    @echo "Revolutionary Tauri + Dioxus integration dashboard:"
+    @echo "  1. 🏗️  Professional desktop interface with Dioxus"
+    @echo "  2. 📊  Real-time service monitoring and control"
+    @echo "  3. 🎮  Complete integration test suite execution"
+    @echo "  4. 💰  Interactive wallet management (Alice & Bob)"
+    @echo "  5. 📋  Live service logs and activity monitoring"
+    @echo ""
+    @echo "Features:"
+    @echo "  • Native desktop performance with Tauri"
+    @echo "  • Reactive UI with Dioxus web framework"
+    @echo "  • Real-time updates every 2 seconds"
+    @echo "  • One-click service management"
+    @echo "  • Complete replication of 'just integration' functionality"
+    @echo ""
+    @echo "🚀 Starting integration dashboard..."
+    @echo ""
+    cd daemons/manastr-tauri && cargo tauri dev
 
 
 # Format all Rust code
