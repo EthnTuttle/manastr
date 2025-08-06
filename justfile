@@ -43,7 +43,8 @@ default:
     @echo ""
     @echo "🎮 Interactive Interfaces:"
     @echo "  just integration   # Complete service orchestration + game validation"
-    @echo "  just dashboard     # Professional Tauri + Dioxus integration dashboard"
+    @echo "  just web           # Quantum web client with automatic service orchestration"
+    @echo "  just web-dev       # Quantum web client development mode (services separate)"
     @echo "  just play          # Trading card game interface (iced.rs)"
 
 # Build all components in the correct order
@@ -60,8 +61,21 @@ build-wasm:
     cd daemons/shared-game-logic && wasm-pack build --target web --out-dir pkg
     @echo "✅ WASM build complete!"
 
-# Build everything including WASM
-build-all: build build-wasm
+# Build quantum web client
+build-web:
+    @echo "🌐 Building quantum web client..."
+    @echo ""
+    @echo "🚀 Compiling React + Styled Components"
+    @echo "⚡ Bundling NDK and Cashu-TS dependencies"
+    @echo "🔮 Optimizing quantum animations"
+    @echo ""
+    cd daemons/manastr-web && npm run build
+    @echo ""
+    @echo "✅ Quantum web client build complete!"
+    @echo "📁 Output: daemons/manastr-web/dist/"
+
+# Build everything including WASM and web client
+build-all: build build-wasm build-web
 
 # Run all unit tests
 test:
@@ -122,6 +136,56 @@ play:
     @echo "🚀 Starting interactive gaming session..."
     @echo ""
     cd daemons/integration_tests && cargo run --bin integration-runner -- --gui
+
+# 🌐 WEB CLIENT - Start services and launch quantum web interface  
+web:
+    @echo "🌐 LAUNCHING MANASTR QUANTUM WEB CLIENT"
+    @echo "======================================"
+    @echo ""
+    @echo "Revolutionary sci-fi web interface featuring:"
+    @echo "  🚀 React-based quantum UI with Arwes-inspired aesthetics"
+    @echo "  ⚡ Real-time Nostr client integration"
+    @echo "  💰 Advanced Cashu wallet operations"
+    @echo "  🎮 Game engine coordination"
+    @echo "  🔮 Futuristic animations and effects"
+    @echo ""
+    @echo "This will:"
+    @echo "  1. 🏗️  Start all backend services (CDK mint, Nostr relay, Game Engine)"
+    @echo "  2. ⏳  Wait for services to be ready"
+    @echo "  3. 🌍  Launch quantum web client on http://localhost:8080"
+    @echo "  4. 🔌  Connect to Nostr relay (ws://localhost:7777)"
+    @echo "  5. 💰  Connect to Cashu mint (http://localhost:3333)"
+    @echo "  6. 🎮  Connect to Game Engine (http://localhost:4444)"
+    @echo ""
+    @echo "🚀 Initializing quantum web client session..."
+    @echo ""
+    cd daemons/integration_tests && cargo run --bin integration-runner -- --web
+
+# 🌐 WEB DEV - Start quantum web client in development mode (standalone)
+web-dev:
+    @echo "🌐 STARTING MANASTR QUANTUM WEB CLIENT (DEV MODE)"
+    @echo "================================================="
+    @echo ""
+    @echo "🚀 REVOLUTIONARY SCI-FI WEB INTERFACE"
+    @echo "Features:"
+    @echo "  ⚡ React + Styled Components architecture"
+    @echo "  🔮 Futuristic animations and quantum effects"
+    @echo "  📡 Real NDK Nostr client integration"
+    @echo "  💰 Cashu-TS wallet with C value support"
+    @echo "  🎮 Game engine coordination protocols"
+    @echo "  🌌 Arwes-inspired sci-fi aesthetic"
+    @echo ""
+    @echo "Development mode - quantum web client only:"
+    @echo "  🌍  Quantum interface: http://localhost:8080"
+    @echo "  🔧  Hot reload enabled"
+    @echo "  ⚡  Connect manually to quantum services:"
+    @echo "     - Nostr relay: ws://localhost:7777"
+    @echo "     - Cashu mint: http://localhost:3333"
+    @echo "     - Game engine: http://localhost:4444"
+    @echo ""
+    @echo "💡 Note: Start backend services separately with 'just integration'"
+    @echo ""
+    cd daemons/manastr-web && npm run dev
 
 # 🖥️ INTEGRATION DASHBOARD - Tauri + Dioxus dashboard with service orchestration
 dashboard:

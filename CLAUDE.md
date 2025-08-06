@@ -19,6 +19,9 @@ manastr/
 │   ├── cdk/                 # ✅ Official CDK submodule with full mint functionality
 │   ├── config/              # ✅ Manastr-specific configurations for all services
 │   ├── gaming-wallet/       # ✅ CDK extension for C value access
+│   ├── manastr-web/         # 🚀 NEW - Revolutionary quantum web client
+│   ├── cashu-ts/            # 📦 Cashu-TS library submodule  
+│   ├── ndk/                 # 📦 NDK Nostr library submodule
 │   └── integration_tests/   # ✅ Complete - Consolidated integration test suite
 └── CLAUDE.md               # 📍 THIS FILE - Memory & status tracking
 ```
@@ -26,6 +29,9 @@ manastr/
 ### Quick Commands
 ```bash
 just build          # Build all components  
+just build-web      # Build quantum web client
+just web-dev        # Start quantum web client (dev mode)
+just web            # Start web client + services
 just integration    # Run complete system integration test (THE REFERENCE)
 just dev            # Full development workflow (build + test + check)
 just --list         # Show all available commands
@@ -118,6 +124,27 @@ let army = generate_army_from_cashu_c_value(c_value_bytes, league_id);
 - **Distributes** loot after successful validation
 - **Burns** mana tokens via authorized Nostr signatures
 - **Publishes** KIND 31006 loot distribution events
+
+## Quantum Web Client Architecture
+
+**TECHNOLOGY STACK**:
+- **React 17**: Modern component architecture with hooks
+- **Styled Components**: CSS-in-JS for dynamic quantum styling
+- **Vite**: Lightning-fast development and optimized production builds
+- **NDK**: Real Nostr client with full protocol support
+- **Cashu-TS**: Authentic Cashu operations with C value access
+
+**DESIGN PRINCIPLES**:
+- **Sci-Fi Aesthetic**: Arwes-inspired quantum interface design
+- **Real Integration**: No mocking - authentic library usage
+- **Responsive**: Works on desktop, tablet, and mobile
+- **Performance**: Optimized animations and lazy loading
+
+**KEY FEATURES**:
+1. **Quantum Visual Effects**: Scanning lines, pulsing glows, matrix animations
+2. **Real-time Status**: Live connection monitoring for all services
+3. **Terminal Logging**: Sci-fi style activity log with quantum terminology
+4. **Touch-Friendly**: Mobile-optimized button sizes and interactions
 
 ## Gaming Wallet Strategy
 
@@ -231,14 +258,26 @@ This principle ensures integration tests validate the complete production system
 
 **Status**: Revolutionary zero-coordination multiplayer gaming architecture **COMPLETE AND OPERATIONAL** with canonical reference implementation! 🎮✨
 
-## 🎮 Next Phase: Interactive Trading Card Game Interface
+## 🚀 REVOLUTIONARY QUANTUM WEB CLIENT
 
-**COMPLETED**: iced.rs-based TCG interface operational with `just play` command:
-- **Educational Gaming**: Transform technical operations into intuitive card game mechanics
-- **Dual-Player Control**: Play both sides of a match interactively through the 9-phase flow
+**COMPLETED**: React-based sci-fi web interface operational with `just web-dev` command:
+- **Futuristic UI**: Arwes-inspired quantum aesthetic with cyber animations
+- **React Architecture**: Modern component-based structure with Styled Components
+- **Real Integrations**: Authentic NDK Nostr client and Cashu-TS wallet
+- **Sci-Fi Effects**: Pulsing glows, scanning lines, quantum terminology
+- **Responsive Design**: Works on all devices with touch-friendly controls
+- **Hot Reload**: Instant development feedback with Vite build system
+
+## 🎮 Interactive Gaming Interfaces
+
+**Multiple Interface Options**:
+- **Quantum Web Client** (`just web-dev`): Modern React sci-fi interface
+- **Trading Card Game** (`just play`): iced.rs-based educational interface
+
+Both interfaces provide:
 - **Service Orchestration**: Automatic backend startup, health checking, and cleanup
 - **Real Backend Integration**: All game actions execute authentic Nostr/CDK operations
-- **One-Command Gaming**: Complete experience via `just play`
+- **Complete Experience**: Full 9-phase match flow implementation
 
 ## 🚀 STRATEGIC EVOLUTION: BEVY + MATCHBOX INTEGRATION
 

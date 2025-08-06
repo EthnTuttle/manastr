@@ -18,7 +18,7 @@
 - **Shared WASM Logic** - Deterministic game logic for client-server synchronization  
 - **Nostr Relay** (:7777) - Decentralized event coordination using `strfry`
 - **Pure CDK Mint** (:3333) - Standard Cashu protocol with dual currencies (mana/loot)
-- **Web Client** (:8080) - Player-driven interface with WASM integration
+- **Quantum Web Client** (:8080) - Revolutionary React-based sci-fi interface
 
 ## 🎮 Player-Driven Match Flow
 
@@ -54,17 +54,21 @@
 ### 🚀 **Quick Start - Run the Integration Tests**
 
 ```bash
-# 1. Build all services
-just build
+# 1. Build all services (including quantum web client)
+just build-all
 
-# 2. Run the complete integration test suite (THE REFERENCE)
-cd daemons/integration_tests
-cargo run --bin integration-runner
+# 2. Start the quantum web client (dev mode)
+just web-dev
+
+# 3. Run the complete integration test suite (THE REFERENCE)
+just integration
 ```
 
-**Or use the convenient justfile command:**
+**Multiple Interface Options:**
 ```bash
-just integration
+just web-dev      # Revolutionary sci-fi quantum web interface
+just play         # Educational trading card game interface  
+just integration  # Complete system validation
 ```
 
 ### 🎯 **What the Integration Tests Prove**
@@ -94,7 +98,7 @@ The `daemons/integration_tests/` directory contains the **complete working syste
 - **Cryptographic Security**: Real-time anti-cheat with commitment verification
 - **Shared WASM Logic**: Deterministic client-server synchronization
 
-**⏳ Next: Complete pure CDK mint and WASM web client**
+**✅ Quantum Web Client Complete!** Revolutionary sci-fi interface with real NDK/Cashu integration
 
 ## 📁 Project Structure
 
@@ -104,6 +108,9 @@ manastr/
 │   ├── integration_tests/  # 🎯 THE REFERENCE - Complete system validation
 │   ├── game-engine-bot/    # ✅ Pure validator with anti-cheat
 │   ├── shared-game-logic/  # ✅ WASM-compatible deterministic logic  
+│   ├── manastr-web/        # 🚀 Revolutionary quantum web client
+│   ├── cashu-ts/           # 📦 Cashu-TS library submodule
+│   ├── ndk/                # 📦 NDK Nostr library submodule
 │   ├── nostr-relay/        # ✅ Decentralized event coordination
 │   └── cdk/                # ✅ Official CDK submodule with full mint functionality
 ├── docs/                   # ✅ Revolutionary architecture specifications
