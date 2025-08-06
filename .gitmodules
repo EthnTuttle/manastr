@@ -5,3 +5,9 @@
 	path = daemons/cdk
 	url = git@github.com:EthnTuttle/cdk.git
 	branch = manastr-custom-units
+[submodule "daemons/cashu-ts"]
+	path = daemons/cashu-ts
+	url = https://github.com/cashubtc/cashu-ts.git
+[submodule "daemons/ndk"]
+	path = daemons/ndk
+	url = https://github.com/nostr-dev-kit/ndk.git

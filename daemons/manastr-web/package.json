@@ -1,0 +1,27 @@
+{
+  "name": "manastr-web",
+  "version": "1.0.0",
+  "description": "Manastr web client - Nostr client and Cashu wallet",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --port 8080 --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@cashu/cashu-ts": "^2.6.0",
+    "@nostr-dev-kit/ndk": "^2.12.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "styled-components": "^6.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@vitejs/plugin-react": "^4.0.0"
+  }
+}
