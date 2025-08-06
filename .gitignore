@@ -56,3 +56,5 @@ test-results/
 *.tmp
 *.temp
 *.log
+
+*.sqlite*
