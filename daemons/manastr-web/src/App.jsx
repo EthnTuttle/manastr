@@ -29,11 +29,6 @@ const scanlineAnimation = keyframes`
   100% { transform: translateY(100vh); }
 `;
 
-const matrixRain = keyframes`
-  0% { transform: translateY(-100vh); opacity: 1; }
-  100% { transform: translateY(100vh); opacity: 0; }
-`;
-
 const pulseGlow = keyframes`
   0%, 100% { 
     text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 15px #00ffff, 0 0 20px #00ffff;
@@ -85,12 +80,11 @@ const AppContainer = styled.div`
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 40px;
-  position: relative;
+  margin-bottom: 30px;
 `;
 
 const Title = styled.h1`
-  font-size: 4rem;
+  font-size: 3rem;
   margin: 0;
   background: linear-gradient(45deg, #00ffff, #8b5cf6, #00ffff);
   background-size: 200% 200%;
@@ -98,33 +92,16 @@ const Title = styled.h1`
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  position: relative;
-  z-index: 2;
   
   @media (max-width: 768px) {
-    font-size: 2.5rem;
-  }
-  
-  &::before {
-    content: '🏛️ MANASTR';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    -webkit-text-fill-color: rgba(0, 255, 255, 0.2);
-    background-clip: text;
-    -webkit-background-clip: text;
-    z-index: -1;
-    animation: ${matrixRain} 8s linear infinite;
+    font-size: 2rem;
   }
 `;
 
 const Subtitle = styled.div`
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   color: #7fffd4;
-  margin: 10px 0;
+  margin: 5px 0;
   text-shadow: 0 0 10px rgba(127, 255, 212, 0.5);
   
   @media (max-width: 768px) {
@@ -132,18 +109,40 @@ const Subtitle = styled.div`
   }
 `;
 
-const StatusGrid = styled.div`
+const DashboardLayout = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: 1fr;
   gap: 20px;
-  margin-bottom: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
 `;
 
-const StatusCard = styled.div`
-  background: rgba(0, 0, 0, 0.8);
+const ServiceRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+`;
+
+const PlayerRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const MatchControlsRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+`;
+
+const EntityBox = styled.div`
+  background: rgba(0, 17, 34, 0.9);
   border: 1px solid #00ffff;
   padding: 20px;
-  text-align: center;
   position: relative;
   transition: all 0.3s ease;
   
@@ -159,7 +158,7 @@ const StatusCard = styled.div`
     -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: subtract;
     mask-composite: exclude;
-    opacity: 0.6;
+    opacity: 0.3;
     transition: opacity 0.3s ease;
   }
   
@@ -175,174 +174,95 @@ const StatusCard = styled.div`
   }
   
   &:hover {
-    background: rgba(0, 17, 34, 0.9);
+    background: rgba(0, 17, 34, 1);
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-    transform: translateY(-2px);
     
     &::before {
-      opacity: 1;
+      opacity: 0.6;
     }
   }
 `;
 
-const StatusTitle = styled.div`
-  font-size: 1.1rem;
-  color: #7fffd4;
-  margin-bottom: 10px;
+const EntityTitle = styled.h3`
+  margin: 0 0 15px 0;
+  color: #00ffff;
+  font-size: 1.2rem;
   text-transform: uppercase;
   letter-spacing: 2px;
-`;
-
-const StatusValue = styled.div`
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #00ffff;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
-`;
-
-const ActionsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 30px;
-  margin-bottom: 40px;
-`;
-
-const ActionSection = styled.div`
-  background: rgba(0, 17, 34, 0.8);
-  border: 1px solid #00ffff;
-  padding: 30px;
-  position: relative;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    border: 1px solid rgba(0, 255, 255, 0.3);
-    pointer-events: none;
-  }
-`;
-
-const ActionTitle = styled.h2`
-  font-size: 1.6rem;
-  margin-bottom: 20px;
-  color: #00ffff;
-  text-transform: uppercase;
-  letter-spacing: 3px;
   text-align: center;
-  text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 `;
 
-const InfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin-bottom: 20px;
-  
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const InfoItem = styled.div`
-  background: rgba(0, 255, 255, 0.1);
-  padding: 15px;
-  border: 1px solid rgba(0, 255, 255, 0.3);
-`;
-
-const InfoLabel = styled.div`
+const EntityStatus = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
   font-size: 0.9rem;
+`;
+
+const StatusLabel = styled.span`
   color: #7fffd4;
-  margin-bottom: 5px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 `;
 
-const InfoValue = styled.div`
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
+const StatusValue = styled.span`
   color: #00ffff;
-  word-break: break-all;
-  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
 `;
 
-const ActionButton = styled.button`
+const MatchFlowSection = styled(EntityBox)`
+  text-align: center;
+`;
+
+const PhaseGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+`;
+
+const PhaseButton = styled.button`
   background: linear-gradient(45deg, rgba(0, 255, 255, 0.2), rgba(139, 92, 246, 0.2));
   border: 1px solid #00ffff;
   color: #00ffff;
-  padding: 12px 24px;
-  margin: 8px;
+  padding: 15px 10px;
   font-family: 'Courier New', monospace;
-  font-size: 1rem;
+  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
   
   &:hover {
     background: linear-gradient(45deg, rgba(0, 255, 255, 0.4), rgba(139, 92, 246, 0.4));
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
     transform: translateY(-2px);
-  }
-  
-  &:active {
-    transform: translateY(0);
   }
   
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
-    box-shadow: none;
   }
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
+  &.completed {
+    background: linear-gradient(45deg, rgba(34, 197, 94, 0.3), rgba(21, 128, 61, 0.3));
+    border-color: #22c55e;
+    color: #22c55e;
   }
   
-  &:hover::before {
-    left: 100%;
+  &.active {
+    animation: ${glowAnimation} 2s ease-in-out infinite;
   }
 `;
 
-const LogsSection = styled.div`
+const ActivityFeed = styled.div`
   background: rgba(0, 0, 0, 0.9);
   border: 1px solid #00ffff;
   padding: 20px;
-  margin-top: 20px;
-`;
-
-const LogsTitle = styled.h3`
-  margin-bottom: 15px;
-  color: #7fffd4;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-`;
-
-const LogOutput = styled.div`
-  background: #000;
-  color: #0f0;
-  padding: 15px;
-  border: 1px solid #0f0;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
-  white-space: pre-wrap;
-  line-height: 1.4;
   
-  /* Custom scrollbar */
   &::-webkit-scrollbar {
     width: 8px;
   }
@@ -352,28 +272,91 @@ const LogOutput = styled.div`
   }
   
   &::-webkit-scrollbar-thumb {
-    background: #0f0;
+    background: #00ffff;
     border-radius: 4px;
   }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: #0a0;
-  }
+`;
+
+const ActivityTitle = styled.h3`
+  margin: 0 0 15px 0;
+  color: #7fffd4;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+`;
+
+const ActivityLog = styled.div`
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #0f0;
+  line-height: 1.4;
+  white-space: pre-wrap;
 `;
 
 export default function App() {
   const [manastrClient] = useState(new ManastrClient());
-  const [status, setStatus] = useState({
-    nostr: 'Disconnected',
-    balance: '0 mana',
-    activeGames: '0',
-    gameEngine: 'Disconnected'
+  
+  // Service states
+  const [serviceStates, setServiceStates] = useState({
+    nostrRelay: { status: 'Disconnected', events: 0, connections: 0 },
+    cashuMint: { status: 'Disconnected', health: 'Unknown', totalTokens: 0 },
+    gameEngine: { status: 'Disconnected', matches: 0, validations: 0 }
   });
-  const [logs, setLogs] = useState('MANASTR system initialized...\nQuantum gaming protocols loaded.\nReady for revolutionary gaming.\n');
+  
+  // Player states  
+  const [playerStates, setPlayerStates] = useState({
+    alexi: { balance: 0, npub: '', eventsPublished: 0, connected: false },
+    boberto: { balance: 0, npub: '', eventsPublished: 0, connected: false }
+  });
+  
+  // Match flow state
+  const [matchFlow, setMatchFlow] = useState({
+    currentPhase: 0,
+    phases: [
+      { name: '👥 Create Players', completed: false },
+      { name: '🎯 Challenge', completed: false },
+      { name: '🎲 Accept', completed: false },
+      { name: '🔮 Reveal Tokens', completed: false },
+      { name: '⚔️ Combat', completed: false },
+      { name: '🏆 Results', completed: false },
+      { name: '💰 Loot Distribution', completed: false }
+    ]
+  });
+  
+  const [logs, setLogs] = useState('MANASTR Integration Test Dashboard\nReady for revolutionary gaming operations.\n');
 
   useEffect(() => {
     // Set up client callbacks
-    manastrClient.onStatusUpdate = setStatus;
+    manastrClient.onStatusUpdate = (status) => {
+      setServiceStates(prev => ({
+        ...prev,
+        nostrRelay: { 
+          ...prev.nostrRelay, 
+          status: status.nostr === 'Connected' ? 'Connected' : 'Disconnected',
+          events: prev.nostrRelay.events,
+          connections: status.nostr === 'Connected' ? 1 : 0
+        },
+        cashuMint: status.cashuMint || { 
+          ...prev.cashuMint, 
+          status: 'Unknown', 
+          health: 'Unknown',
+          totalTokens: prev.cashuMint.totalTokens
+        },
+        gameEngine: { 
+          ...prev.gameEngine, 
+          status: status.gameEngine === 'Nostr Ready' ? 'Nostr Ready' : 'Disconnected',
+          matches: prev.gameEngine.matches,
+          validations: prev.gameEngine.validations
+        }
+      }));
+    };
+    
+    manastrClient.onPlayerUpdate = (playerName, playerData) => {
+      setPlayerStates(prev => ({
+        ...prev,
+        [playerName]: { ...prev[playerName], ...playerData }
+      }));
+    };
+    
     manastrClient.onLog = (message) => {
       setLogs(prev => prev + `[${new Date().toLocaleTimeString()}] ${message}\n`);
     };
@@ -382,121 +365,209 @@ export default function App() {
     manastrClient.initialize();
 
     return () => {
-      manastrClient.disconnect();
+      if (manastrClient.nostr) {
+        manastrClient.disconnectNostr();
+      }
     };
   }, [manastrClient]);
+
+  const executePhase = async (phaseIndex) => {
+    const phaseName = matchFlow.phases[phaseIndex].name;
+    manastrClient.log(`🎮 Executing ${phaseName}...`);
+    
+    try {
+      switch (phaseIndex) {
+        case 0: // Create Players
+          await manastrClient.createPlayers();
+          break;
+        case 1: // Challenge
+          manastrClient.log('🎯 Phase 1: Creating match challenge...');
+          // TODO: Implement challenge creation
+          break;
+        case 2: // Accept
+          manastrClient.log('🎲 Phase 2: Accepting challenge...');
+          // TODO: Implement challenge acceptance
+          break;
+        case 3: // Reveal Tokens
+          manastrClient.log('🔮 Phase 3: Revealing tokens...');
+          // TODO: Implement token reveal
+          break;
+        case 4: // Combat
+          manastrClient.log('⚔️ Phase 4: Executing combat rounds...');
+          // TODO: Implement combat
+          break;
+        case 5: // Results
+          manastrClient.log('🏆 Phase 5: Submitting results...');
+          // TODO: Implement result submission
+          break;
+        case 6: // Loot Distribution
+          manastrClient.log('💰 Phase 6: Distributing loot...');
+          // TODO: Implement loot distribution
+          break;
+        default:
+          manastrClient.log(`❌ Unknown phase: ${phaseIndex}`);
+          return;
+      }
+      
+      // Mark phase as completed
+      setMatchFlow(prev => ({
+        ...prev,
+        currentPhase: Math.max(prev.currentPhase, phaseIndex + 1),
+        phases: prev.phases.map((phase, idx) => 
+          idx === phaseIndex ? { ...phase, completed: true } : phase
+        )
+      }));
+      
+      manastrClient.log(`✅ ${phaseName} completed successfully`);
+      
+    } catch (error) {
+      manastrClient.log(`❌ ${phaseName} failed: ${error.message}`);
+    }
+  };
 
   return (
     <>
       <GlobalStyle />
       <AppContainer>
         <Header>
-          <Title>🏛️ MANASTR</Title>
-          <Subtitle>Revolutionary Zero-Coordination Gaming</Subtitle>
-          <Subtitle>Quantum Nostr Client & Cashu Wallet</Subtitle>
+          <Title>🏛️ MANASTR Integration Dashboard</Title>
+          <Subtitle>Revolutionary Zero-Coordination Gaming System</Subtitle>
+          <Subtitle>Live Entity Monitoring & Match Flow Control</Subtitle>
         </Header>
 
-          <StatusGrid>
-            <StatusCard>
-              <StatusTitle>NOSTR CONNECTION</StatusTitle>
-              <StatusValue style={{ color: status.nostr === 'Connected' ? '#10b981' : '#64748b' }}>
-                {status.nostr}
-              </StatusValue>
-            </StatusCard>
-            <StatusCard>
-              <StatusTitle>CASHU BALANCE</StatusTitle>
-              <StatusValue>{status.balance}</StatusValue>
-            </StatusCard>
-            <StatusCard>
-              <StatusTitle>ACTIVE GAMES</StatusTitle>
-              <StatusValue>{status.activeGames}</StatusValue>
-            </StatusCard>
-            <StatusCard>
-              <StatusTitle>GAME ENGINE</StatusTitle>
-              <StatusValue style={{ color: status.gameEngine === 'Connected' ? '#10b981' : '#64748b' }}>
-                {status.gameEngine}
-              </StatusValue>
-            </StatusCard>
-          </StatusGrid>
+        <DashboardLayout>
+          {/* Service Entity Boxes */}
+          <ServiceRow>
+            <EntityBox>
+              <EntityTitle>📡 Nostr Relay</EntityTitle>
+              <EntityStatus>
+                <StatusLabel>Status:</StatusLabel>
+                <StatusValue style={{color: serviceStates.nostrRelay.status === 'Connected' ? '#22c55e' : '#ef4444'}}>
+                  {serviceStates.nostrRelay.status}
+                </StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Events Processed:</StatusLabel>
+                <StatusValue>{serviceStates.nostrRelay.events}</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Active Connections:</StatusLabel>
+                <StatusValue>{serviceStates.nostrRelay.connections}</StatusValue>
+              </EntityStatus>
+            </EntityBox>
 
-          <ActionsGrid>
-            <ActionSection>
-              <ActionTitle>🔗 NOSTR CLIENT</ActionTitle>
-              <InfoGrid>
-                <InfoItem>
-                  <InfoLabel>Public Key</InfoLabel>
-                  <InfoValue id="nostr-pubkey">Not connected</InfoValue>
-                </InfoItem>
-                <InfoItem>
-                  <InfoLabel>Relay</InfoLabel>
-                  <InfoValue>ws://localhost:7777</InfoValue>
-                </InfoItem>
-              </InfoGrid>
-              <ActionButton onClick={() => manastrClient.connectNostr()}>
-                Connect to Nostr
-              </ActionButton>
-              <ActionButton onClick={() => manastrClient.disconnectNostr()}>
-                Disconnect
-              </ActionButton>
-              <ActionButton onClick={() => manastrClient.postNote()}>
-                Post Note
-              </ActionButton>
-            </ActionSection>
+            <EntityBox>
+              <EntityTitle>💰 Cashu Mint</EntityTitle>
+              <EntityStatus>
+                <StatusLabel>Health:</StatusLabel>
+                <StatusValue style={{color: serviceStates.cashuMint.status === 'Connected' ? '#22c55e' : '#ef4444'}}>
+                  {serviceStates.cashuMint.health || serviceStates.cashuMint.status}
+                </StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Total Tokens:</StatusLabel>
+                <StatusValue>{serviceStates.cashuMint.totalTokens}</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Endpoint:</StatusLabel>
+                <StatusValue>:3333</StatusValue>
+              </EntityStatus>
+            </EntityBox>
 
-            <ActionSection>
-              <ActionTitle>💰 CASHU WALLET</ActionTitle>
-              <InfoGrid>
-                <InfoItem>
-                  <InfoLabel>Mint URL</InfoLabel>
-                  <InfoValue>http://localhost:3333</InfoValue>
-                </InfoItem>
-                <InfoItem>
-                  <InfoLabel>Total Proofs</InfoLabel>
-                  <InfoValue id="proof-count">0</InfoValue>
-                </InfoItem>
-              </InfoGrid>
-              <ActionButton onClick={() => manastrClient.connectMint()}>
-                Connect to Mint
-              </ActionButton>
-              <ActionButton onClick={() => manastrClient.mintTokens()}>
-                Mint 10 mana
-              </ActionButton>
-              <ActionButton onClick={() => manastrClient.checkBalance()}>
-                Check Balance
-              </ActionButton>
-              <ActionButton onClick={() => manastrClient.showProofs()}>
-                Show Proofs
-              </ActionButton>
-            </ActionSection>
+            <EntityBox>
+              <EntityTitle>🎮 Game Engine Bot</EntityTitle>
+              <EntityStatus>
+                <StatusLabel>Status:</StatusLabel>
+                <StatusValue style={{color: serviceStates.gameEngine.status === 'Nostr Ready' ? '#22c55e' : '#ef4444'}}>
+                  {serviceStates.gameEngine.status}
+                </StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Active Matches:</StatusLabel>
+                <StatusValue>{serviceStates.gameEngine.matches}</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Validations:</StatusLabel>
+                <StatusValue>{serviceStates.gameEngine.validations}</StatusValue>
+              </EntityStatus>
+            </EntityBox>
+          </ServiceRow>
 
-            <ActionSection>
-              <ActionTitle>🎮 GAME ENGINE</ActionTitle>
-              <InfoGrid>
-                <InfoItem>
-                  <InfoLabel>Engine Status</InfoLabel>
-                  <InfoValue id="engine-status">Not connected</InfoValue>
-                </InfoItem>
-                <InfoItem>
-                  <InfoLabel>Match Count</InfoLabel>
-                  <InfoValue id="match-count">0</InfoValue>
-                </InfoItem>
-              </InfoGrid>
-              <ActionButton onClick={() => manastrClient.connectGameEngine()}>
-                Connect Engine
-              </ActionButton>
-              <ActionButton onClick={() => manastrClient.createMatch()}>
-                Create Match
-              </ActionButton>
-              <ActionButton onClick={() => manastrClient.listMatches()}>
-                List Matches
-              </ActionButton>
-            </ActionSection>
-          </ActionsGrid>
+          {/* Player Entity Boxes */}
+          <PlayerRow>
+            <EntityBox>
+              <EntityTitle>🏛️ Alexi</EntityTitle>
+              <EntityStatus>
+                <StatusLabel>Balance:</StatusLabel>
+                <StatusValue>{playerStates.alexi.balance} mana</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Npub:</StatusLabel>
+                <StatusValue>{playerStates.alexi.npub ? playerStates.alexi.npub.substring(0, 16) + '...' : 'Not created'}</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Events Published:</StatusLabel>
+                <StatusValue>{playerStates.alexi.eventsPublished}</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Status:</StatusLabel>
+                <StatusValue style={{color: playerStates.alexi.connected ? '#22c55e' : '#ef4444'}}>
+                  {playerStates.alexi.connected ? 'Connected' : 'Not Created'}
+                </StatusValue>
+              </EntityStatus>
+            </EntityBox>
 
-          <LogsSection>
-            <LogsTitle>📜 QUANTUM ACTIVITY LOG</LogsTitle>
-            <LogOutput>{logs}</LogOutput>
-          </LogsSection>
+            <EntityBox>
+              <EntityTitle>🏛️ Boberto</EntityTitle>
+              <EntityStatus>
+                <StatusLabel>Balance:</StatusLabel>
+                <StatusValue>{playerStates.boberto.balance} mana</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Npub:</StatusLabel>
+                <StatusValue>{playerStates.boberto.npub ? playerStates.boberto.npub.substring(0, 16) + '...' : 'Not created'}</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Events Published:</StatusLabel>
+                <StatusValue>{playerStates.boberto.eventsPublished}</StatusValue>
+              </EntityStatus>
+              <EntityStatus>
+                <StatusLabel>Status:</StatusLabel>
+                <StatusValue style={{color: playerStates.boberto.connected ? '#22c55e' : '#ef4444'}}>
+                  {playerStates.boberto.connected ? 'Connected' : 'Not Created'}
+                </StatusValue>
+              </EntityStatus>
+            </EntityBox>
+          </PlayerRow>
+
+          {/* Match Flow Controls */}
+          <MatchControlsRow>
+            <MatchFlowSection>
+              <EntityTitle>🎯 7-Phase Match Flow Control</EntityTitle>
+              <PhaseGrid>
+                {matchFlow.phases.map((phase, idx) => (
+                  <PhaseButton
+                    key={idx}
+                    onClick={() => executePhase(idx)}
+                    className={`
+                      ${phase.completed ? 'completed' : ''} 
+                      ${idx === matchFlow.currentPhase ? 'active' : ''}
+                    `}
+                    disabled={idx > matchFlow.currentPhase + 1}
+                  >
+                    {phase.name}
+                  </PhaseButton>
+                ))}
+              </PhaseGrid>
+            </MatchFlowSection>
+          </MatchControlsRow>
+
+          {/* Live Activity Feed */}
+          <ActivityFeed>
+            <ActivityTitle>📡 Live Activity Stream</ActivityTitle>
+            <ActivityLog>{logs}</ActivityLog>
+          </ActivityFeed>
+        </DashboardLayout>
       </AppContainer>
     </>
   );

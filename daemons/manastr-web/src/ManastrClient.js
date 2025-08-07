@@ -9,9 +9,16 @@ export default class ManastrClient {
         this.balance = 0;
         this.proofs = [];
         
+        // Players (like integration test)
+        this.players = {
+            alexi: null,
+            boberto: null
+        };
+        
         // Callbacks for UI updates
         this.onStatusUpdate = null;
         this.onLog = null;
+        this.onPlayerUpdate = null;
         
         this.status = {
             nostr: 'Disconnected',
@@ -236,6 +243,9 @@ export default class ManastrClient {
             this.log(`📋 Mint quantum portal: ${mintUrl}`);
             this.log(`🔗 Mint quantum version: ${mintInfo.version || 'Unknown'}`);
             
+            // Update mint health status
+            this.updateMintHealth('Healthy');
+            
             // Create wallet instance
             this.wallet = new this.CashuWallet(this.mint);
             this.log('💼 Quantum wallet materialized');
@@ -245,6 +255,20 @@ export default class ManastrClient {
         } catch (error) {
             this.log(`❌ Quantum mint connection failed: ${error.message}`);
             this.log('🔧 Ensure CDK quantum mint is operational on localhost:3333');
+            this.updateMintHealth('Failed');
+        }
+    }
+
+    updateMintHealth(health) {
+        if (this.onStatusUpdate) {
+            this.onStatusUpdate({
+                ...this.status,
+                cashuMint: { 
+                    status: health === 'Healthy' ? 'Connected' : 'Disconnected',
+                    health: health,
+                    totalTokens: 0 
+                }
+            });
         }
     }
 
@@ -427,6 +451,142 @@ export default class ManastrClient {
         
         // Also log to browser console
         console.log(`[MANASTR-QUANTUM] ${message}`);
+    }
+
+    // Deterministic player creation (matching integration test)
+    createDeterministicKeys(seed) {
+        // Use same hash-based key generation as integration test
+        const encoder = new TextEncoder();
+        const data = encoder.encode(seed);
+        
+        return crypto.subtle.digest('SHA-256', data).then(hashBuffer => {
+            const hashArray = new Uint8Array(hashBuffer);
+            const privateKeyHex = Array.from(hashArray, b => b.toString(16).padStart(2, '0')).join('');
+            return privateKeyHex;
+        });
+    }
+
+    async createPlayer(name, seed) {
+        try {
+            this.log(`👥 Creating player ${name} with deterministic seed...`);
+            
+            // Create deterministic keys (same method as integration test)
+            const privateKeyHex = await this.createDeterministicKeys(seed);
+            
+            // Create signer from deterministic private key
+            const signer = new this.NDKPrivateKeySigner(privateKeyHex);
+            const user = await signer.user();
+            const npub = user.npub;
+            
+            // Create separate NDK instance for this player
+            const playerNostr = new this.NDK({
+                explicitRelayUrls: ['ws://localhost:7777'],
+                signer: signer
+            });
+            
+            await playerNostr.connect();
+            
+            // Create gaming wallet for this player (like integration test)
+            const mintUrl = 'http://localhost:3333';
+            const playerMint = new this.CashuMint(mintUrl);
+            
+            // Test mint connection first
+            try {
+                await playerMint.getInfo();
+                this.log(`🔗 Mint connection verified for ${name}`);
+            } catch (mintError) {
+                throw new Error(`Mint connection failed for ${name}: ${mintError.message}`);
+            }
+            
+            const gamingWallet = new this.CashuWallet(playerMint);
+            
+            // Mint initial gaming tokens (like integration test: 100 mana)
+            this.log(`💰 Minting 100 mana tokens for ${name}...`);
+            
+            try {
+                // Request quote for minting tokens with specific unit (matching integration test)
+                const mintAmount = 100;
+                const quote = await gamingWallet.createMintQuote(mintAmount, 'mana');
+                this.log(`📋 Quote created for ${name}: ${quote.quote} (${mintAmount} mana)`);
+                
+                // Mint tokens using the quote
+                const { proofs } = await gamingWallet.mintTokens(mintAmount, quote.quote);
+                this.log(`✅ Minted ${proofs.length} proofs for ${name}`);
+                
+                // Calculate balance from proofs
+                const balance = proofs.reduce((sum, proof) => sum + proof.amount, 0);
+                
+                const player = {
+                    name,
+                    npub,
+                    signer,
+                    nostrClient: playerNostr,
+                    wallet: gamingWallet,
+                    tokens: proofs,
+                    balance: balance,
+                    eventsPublished: 0,
+                    connected: true
+                };
+                
+                this.players[name.toLowerCase()] = player;
+                
+                this.log(`✅ Player ${name} created successfully`);
+                this.log(`🔑 ${name} npub: ${npub.substring(0, 20)}...`);
+                this.log(`💰 ${name} balance: ${player.balance} mana`);
+                
+                // Update UI via callback
+                if (this.onPlayerUpdate) {
+                    this.onPlayerUpdate(name.toLowerCase(), {
+                        balance: player.balance,
+                        npub: npub,
+                        eventsPublished: player.eventsPublished,
+                        connected: true
+                    });
+                }
+                
+                return player;
+                
+            } catch (mintError) {
+                this.log(`❌ Token minting failed for ${name}: ${mintError.message}`);
+                this.log(`🔍 Mint error details: ${JSON.stringify(mintError, null, 2)}`);
+                throw new Error(`Token minting failed: ${mintError.message}`);
+            }
+            
+        } catch (error) {
+            this.log(`❌ Failed to create player ${name}: ${error.message}`);
+            
+            // Update UI to show player creation failed
+            if (this.onPlayerUpdate) {
+                this.onPlayerUpdate(name.toLowerCase(), {
+                    balance: 0,
+                    npub: 'Creation failed',
+                    eventsPublished: 0,
+                    connected: false
+                });
+            }
+            
+            throw error;
+        }
+    }
+
+    async createPlayers() {
+        try {
+            this.log('🎭 Creating deterministic test players...');
+            
+            // Create Alexi and Boberto with same seeds as integration test
+            const alexi = await this.createPlayer('Alexi', 'Alexi');
+            const boberto = await this.createPlayer('Boberto', 'Boberto'); 
+            
+            this.log('✅ Both players created successfully');
+            this.log(`🏛️ Alexi balance: ${alexi.balance} mana`);
+            this.log(`🏛️ Boberto balance: ${boberto.balance} mana`);
+            
+            return { alexi, boberto };
+            
+        } catch (error) {
+            this.log(`❌ Player creation failed: ${error.message}`);
+            throw error;
+        }
     }
 
     disconnect() {
