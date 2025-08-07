@@ -27,6 +27,11 @@ export default class ManastrClient {
         try {
             await this.loadLibraries();
             this.log('✅ Quantum libraries loaded successfully');
+            
+            // Auto-connect to services
+            await this.connectNostr();
+            await this.connectMint();
+            
             this.log('🔮 Ready for revolutionary gaming operations');
         } catch (error) {
             this.log(`❌ Failed to load quantum libraries: ${error.message}`);
@@ -43,11 +48,12 @@ export default class ManastrClient {
             // Import NDK
             const ndkModule = await import('@nostr-dev-kit/ndk');
             this.log('📦 NDK neural-network initialized');
+            console.log('NDK module:', ndkModule); // Debug log
             
             // Store for later use
             this.CashuWallet = cashuModule.CashuWallet;
             this.CashuMint = cashuModule.CashuMint;
-            this.NDK = ndkModule.NDK;
+            this.NDK = ndkModule.default || ndkModule.NDK;
             this.NDKEvent = ndkModule.NDKEvent;
             this.NDKPrivateKeySigner = ndkModule.NDKPrivateKeySigner;
             
@@ -66,9 +72,8 @@ export default class ManastrClient {
         try {
             this.log('🔗 Establishing Nostr quantum entanglement...');
             
-            // Generate ephemeral private key for demo
-            const privateKey = this.NDKPrivateKeySigner.generate();
-            this.signer = new this.NDKPrivateKeySigner(privateKey);
+            // Generate ephemeral signer for demo
+            this.signer = this.NDKPrivateKeySigner.generate();
             
             // Create NDK instance with signer
             this.nostr = new this.NDK({
@@ -95,6 +100,18 @@ export default class ManastrClient {
                 pubkeyElement.textContent = pubkey.substring(0, 32) + '...';
             }
             
+            // Subscribe to game events for live feed
+            await this.subscribeToGameEvents();
+            
+            // Update game engine status since it operates via Nostr
+            this.log('🎮 Game engine accessible via Nostr protocol');
+            this.updateStatus('gameEngine', 'Nostr Ready');
+            
+            const engineStatusElement = document.getElementById('engine-status');
+            if (engineStatusElement) {
+                engineStatusElement.textContent = 'Nostr Ready';
+            }
+            
         } catch (error) {
             this.log(`❌ Nostr quantum entanglement failed: ${error.message}`);
             this.updateStatus('nostr', 'Failed');
@@ -113,6 +130,65 @@ export default class ManastrClient {
             if (pubkeyElement) {
                 pubkeyElement.textContent = 'Not connected';
             }
+        }
+    }
+
+    async subscribeToGameEvents() {
+        if (!this.nostr) {
+            this.log('❌ Nostr connection required for game events');
+            return;
+        }
+
+        try {
+            this.log('🎮 Subscribing to live game events...');
+            
+            // Subscribe to game-related events (kinds 31000-31006)
+            const gameEventFilter = {
+                kinds: [31000, 31001, 31002, 31003, 31004, 31005, 31006],
+                limit: 50
+            };
+            
+            const subscription = this.nostr.subscribe(gameEventFilter);
+            
+            subscription.on('event', (event) => {
+                this.handleGameEvent(event);
+            });
+            
+            this.log('📡 Live game event feed activated');
+            
+        } catch (error) {
+            this.log(`❌ Game event subscription failed: ${error.message}`);
+        }
+    }
+
+    handleGameEvent(event) {
+        const eventTypes = {
+            31000: '🎯 Match Challenge',
+            31001: '🎲 Match Accepted',
+            31002: '🔮 Token Reveal',
+            31003: '⚔️ Move Committed',
+            31004: '🎭 Move Revealed',
+            31005: '🏆 Match Result',
+            31006: '💰 Loot Distributed'
+        };
+        
+        const eventType = eventTypes[event.kind] || '🎮 Game Event';
+        const pubkey = event.pubkey.substring(0, 8);
+        const timestamp = new Date(event.created_at * 1000).toLocaleTimeString();
+        
+        this.log(`${eventType} from ${pubkey}... at ${timestamp}`);
+        
+        // Show event details if available
+        try {
+            const content = JSON.parse(event.content);
+            if (content.wager_amount) {
+                this.log(`   💰 Wager: ${content.wager_amount} mana`);
+            }
+            if (content.match_id) {
+                this.log(`   🆔 Match: ${content.match_id.substring(0, 8)}...`);
+            }
+        } catch (e) {
+            // Content might not be JSON, that's OK
         }
     }
 
@@ -242,31 +318,39 @@ export default class ManastrClient {
 
     async connectGameEngine() {
         try {
-            this.log('🎮 Establishing connection to quantum game engine...');
+            this.log('🎮 Quantum game engine operates via Nostr protocol...');
             
-            // Simple HTTP health check to game engine
-            const gameEngineUrl = 'http://localhost:4444/health';
-            const response = await fetch(gameEngineUrl);
-            
-            if (response.ok) {
-                this.log('✅ Quantum game engine synchronized');
-                this.updateStatus('gameEngine', 'Connected');
+            // Game engine communicates purely via Nostr - no HTTP endpoints
+            if (this.connected && this.nostr) {
+                this.log('✅ Game engine accessible via Nostr relay');
+                this.log('🤖 Pure state machine architecture - no HTTP endpoints required');
+                this.updateStatus('gameEngine', 'Nostr Ready');
                 
                 const engineStatusElement = document.getElementById('engine-status');
                 if (engineStatusElement) {
-                    engineStatusElement.textContent = 'Connected';
+                    engineStatusElement.textContent = 'Nostr Ready';
                 }
                 
-                // Get match count if available
+                // List matches via Nostr events instead of HTTP
                 await this.listMatches();
             } else {
-                throw new Error(`HTTP quantum interference: ${response.status}`);
+                this.log('⚠️ Connect to Nostr relay first for game engine communication');
+                this.updateStatus('gameEngine', 'Nostr Required');
+                
+                const engineStatusElement = document.getElementById('engine-status');
+                if (engineStatusElement) {
+                    engineStatusElement.textContent = 'Nostr Required';
+                }
             }
             
         } catch (error) {
-            this.log(`❌ Quantum game engine connection failed: ${error.message}`);
-            this.log('🔧 Ensure quantum game engine is operational on localhost:4444');
-            this.updateStatus('gameEngine', 'Failed');
+            this.log(`❌ Game engine setup failed: ${error.message}`);
+            this.updateStatus('gameEngine', 'Error');
+            
+            const engineStatusElement = document.getElementById('engine-status');
+            if (engineStatusElement) {
+                engineStatusElement.textContent = 'Error';
+            }
         }
     }
 

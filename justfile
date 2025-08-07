@@ -41,10 +41,19 @@ default:
     @echo "  just test          # Run all tests"
     @echo "  just integration   # THE definitive system demonstration"
     @echo ""
-    @echo "🎮 Interactive Interfaces:"
+    @echo "🎮 Development Commands:"
+    @echo "  just serve-backend     # 🔄 BACKEND SERVICES ONLY - Build & run all backend services"
+    @echo "  just serve-backend-dev # 🔄 BACKEND SERVICES (skip build for faster iteration)"
+    @echo "  just serve-web-hot     # 🔥 HOT RELOAD WEB CLIENT - Vite dev server with instant updates"
+    @echo "  just serve             # 🚀 COMPLETE SYSTEM - All services + quantum web client (production)"
+    @echo "  just serve-dev         # 🚀 COMPLETE SYSTEM (skip build for faster iteration)"
+    @echo ""
+    @echo "🎯 Hot Reload Development Workflow:"
+    @echo "  Terminal 1: just serve-backend-dev  # Start backend services"
+    @echo "  Terminal 2: just serve-web-hot      # Start hot reload web client"
+    @echo ""
+    @echo "🎮 Other Interfaces:"
     @echo "  just integration   # Complete service orchestration + game validation"
-    @echo "  just web           # Quantum web client with automatic service orchestration"
-    @echo "  just web-dev       # Quantum web client development mode (services separate)"
     @echo "  just play          # Trading card game interface (iced.rs)"
 
 # Build all components in the correct order
@@ -161,6 +170,33 @@ web:
     @echo ""
     cd daemons/integration_tests && cargo run --bin integration-runner -- --web
 
+# 🚀 SERVE - Complete system with all services + quantum web client
+serve:
+    @echo "🚀 LAUNCHING COMPLETE MANASTR SYSTEM"
+    @echo "===================================="
+    @echo ""
+    @echo "🏛️ REVOLUTIONARY ZERO-COORDINATION GAMING SYSTEM"
+    @echo ""
+    @echo "This will:"
+    @echo "  1. 🏗️  Build all components (Rust + WASM + Web client)"
+    @echo "  2. 🔄  Start all backend services:"
+    @echo "     📡 Nostr Relay (ws://localhost:7777)"
+    @echo "     💰 Cashu Mint (http://localhost:3333)"
+    @echo "     🎮 Game Engine (http://localhost:4444)"
+    @echo "  3. 🌍  Serve quantum web client (http://localhost:8080)"
+    @echo "  4. 🔍  Health check all services"
+    @echo "  5. 🎯  Ready for revolutionary gaming!"
+    @echo ""
+    @echo "🔧 Rust-based service orchestration with:"
+    @echo "  ✅ Graceful shutdown (Ctrl+C)"
+    @echo "  ✅ Process lifecycle management"
+    @echo "  ✅ Health monitoring"
+    @echo "  ✅ Centralized logging"
+    @echo ""
+    @echo "🚀 Initializing quantum gaming system..."
+    @echo ""
+    cargo run --release --bin manastr-serve
+
 # 🌐 WEB DEV - Start quantum web client in development mode (standalone)
 web-dev:
     @echo "🌐 STARTING MANASTR QUANTUM WEB CLIENT (DEV MODE)"
@@ -184,6 +220,102 @@ web-dev:
     @echo "     - Game engine: http://localhost:4444"
     @echo ""
     @echo "💡 Note: Start backend services separately with 'just integration'"
+    @echo ""
+    cd daemons/manastr-web && npm run dev
+
+# 🚀 SERVE (SKIP BUILD) - Start system without rebuilding
+serve-dev:
+    @echo "🚀 LAUNCHING MANASTR SYSTEM (SKIP BUILD)"
+    @echo "========================================"
+    @echo ""
+    @echo "⏭️ Skipping build - using existing binaries"
+    @echo "🔧 Development mode for faster iteration"
+    @echo ""
+    cargo run --release --bin manastr-serve -- --skip-build
+
+# 🔥 SERVE HOT - Complete system with hot reload web client
+serve-hot:
+    @echo "🔥 LAUNCHING MANASTR WITH HOT RELOAD"
+    @echo "==================================="
+    @echo ""
+    @echo "🏛️ REVOLUTIONARY ZERO-COORDINATION GAMING SYSTEM"
+    @echo ""
+    @echo "This will:"
+    @echo "  1. 🏗️  Build backend services (Rust + WASM)"
+    @echo "  2. 🔄  Start all backend services:"
+    @echo "     📡 Nostr Relay (ws://localhost:7777)"
+    @echo "     💰 Cashu Mint (http://localhost:3333)"
+    @echo "     🎮 Game Engine (http://localhost:4444)"
+    @echo "  3. 🔥  Start Vite dev server with HOT RELOAD"
+    @echo "  4. 🌍  Web Interface: http://localhost:8080"
+    @echo "  5. ⚡  Instant updates when you edit React/CSS files!"
+    @echo ""
+    @echo "🔧 Usage:"
+    @echo "  Terminal 1: just serve-backend     # Start all backend services"
+    @echo "  Terminal 2: just serve-web-hot     # Start hot reload web client"
+    @echo ""
+    @echo "🚀 Starting backend services first..."
+    @echo ""
+    just serve-backend & sleep 10 && just serve-web-hot
+
+# 🔥 SERVE HOT (SKIP BUILD) - Start system with hot reload, skip building
+serve-hot-dev:
+    @echo "🔥 LAUNCHING MANASTR WITH HOT RELOAD (SKIP BUILD)"
+    @echo "================================================"
+    @echo ""
+    @echo "⏭️ Skipping build - using existing binaries"
+    @echo "🔥 Starting with Vite dev server for instant hot reload"
+    @echo "🔧 Perfect for rapid development iteration"
+    @echo ""
+    @echo "🔧 Usage:"
+    @echo "  Terminal 1: just serve-backend-dev  # Start backend services (skip build)"
+    @echo "  Terminal 2: just serve-web-hot      # Start hot reload web client"
+    @echo ""
+    @echo "🚀 Starting backend services first..."
+    @echo ""
+    just serve-backend-dev & sleep 10 && just serve-web-hot
+
+# 🔄 SERVE BACKEND - Start all backend services only
+serve-backend:
+    @echo "🔄 STARTING MANASTR BACKEND SERVICES"
+    @echo "==================================="
+    @echo ""
+    @echo "This will build and start:"
+    @echo "  📡 Nostr Relay (ws://localhost:7777)"
+    @echo "  💰 Cashu Mint (http://localhost:3333)"  
+    @echo "  🎮 Game Engine (Nostr communication only)"
+    @echo ""
+    @echo "🚀 Building and starting services..."
+    @echo ""
+    cargo run --release --bin manastr-serve -- --backend-only
+
+# 🔄 SERVE BACKEND (SKIP BUILD) - Start backend services without building
+serve-backend-dev:
+    @echo "🔄 STARTING MANASTR BACKEND SERVICES (SKIP BUILD)"
+    @echo "================================================="
+    @echo ""
+    @echo "⏭️ Skipping build - using existing binaries"
+    @echo ""
+    @echo "Starting:"
+    @echo "  📡 Nostr Relay (ws://localhost:7777)"
+    @echo "  💰 Cashu Mint (http://localhost:3333)"
+    @echo "  🎮 Game Engine (Nostr communication only)"
+    @echo ""
+    cargo run --release --bin manastr-serve -- --skip-build --backend-only
+
+# 🔥 SERVE WEB HOT - Start Vite dev server with hot reload
+serve-web-hot:
+    @echo "🔥 STARTING QUANTUM WEB CLIENT WITH HOT RELOAD"
+    @echo "=============================================="
+    @echo ""
+    @echo "🌐 Starting Vite development server..."
+    @echo "🔥 Hot reload enabled for instant updates!"
+    @echo ""
+    @echo "🌍 Web Interface: http://localhost:8080"
+    @echo "⚡ Edit files in daemons/manastr-web/src/ to see changes instantly"
+    @echo ""
+    @echo "💡 Make sure backend services are running first:"
+    @echo "   just serve-backend  # in another terminal"
     @echo ""
     cd daemons/manastr-web && npm run dev
 

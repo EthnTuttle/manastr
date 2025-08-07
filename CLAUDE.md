@@ -20,6 +20,7 @@ manastr/
 │   ├── config/              # ✅ Manastr-specific configurations for all services
 │   ├── gaming-wallet/       # ✅ CDK extension for C value access
 │   ├── manastr-web/         # 🚀 NEW - Revolutionary quantum web client
+│   ├── service-orchestrator/# 🎯 NEW - Rust service orchestration system
 │   ├── cashu-ts/            # 📦 Cashu-TS library submodule  
 │   ├── ndk/                 # 📦 NDK Nostr library submodule
 │   └── integration_tests/   # ✅ Complete - Consolidated integration test suite
@@ -28,10 +29,11 @@ manastr/
 
 ### Quick Commands
 ```bash
+just serve          # 🚀 COMPLETE SYSTEM - Build all + run all services + web client
+just serve-dev      # 🚀 COMPLETE SYSTEM (skip build for faster iteration)
 just build          # Build all components  
 just build-web      # Build quantum web client
 just web-dev        # Start quantum web client (dev mode)
-just web            # Start web client + services
 just integration    # Run complete system integration test (THE REFERENCE)
 just dev            # Full development workflow (build + test + check)
 just --list         # Show all available commands
@@ -270,14 +272,16 @@ This principle ensures integration tests validate the complete production system
 
 ## 🎮 Interactive Gaming Interfaces
 
-**Multiple Interface Options**:
-- **Quantum Web Client** (`just web-dev`): Modern React sci-fi interface
-- **Trading Card Game** (`just play`): iced.rs-based educational interface
+**Complete System Options**:
+- **Service Orchestrator** (`just serve`): 🚀 **THE COMPLETE SOLUTION** - Builds everything, runs all services, serves web client
+- **Development Mode** (`just serve-dev`): Same as above but skips building for faster iteration
 
-Both interfaces provide:
-- **Service Orchestration**: Automatic backend startup, health checking, and cleanup
-- **Real Backend Integration**: All game actions execute authentic Nostr/CDK operations
-- **Complete Experience**: Full 9-phase match flow implementation
+**Individual Interface Options**:
+- **Quantum Web Client** (`just web-dev`): Modern React sci-fi interface (services separate)
+- **Trading Card Game** (`just play`): iced.rs-based educational interface
+- **Integration Tests** (`just integration`): Complete system validation
+
+**🎯 RECOMMENDED**: Use `just serve` for the complete Manastr experience!
 
 ## 🚀 STRATEGIC EVOLUTION: BEVY + MATCHBOX INTEGRATION
 

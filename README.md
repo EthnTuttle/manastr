@@ -64,12 +64,20 @@ just web-dev
 just integration
 ```
 
-**Multiple Interface Options:**
+**Complete System Options:**
 ```bash
-just web-dev      # Revolutionary sci-fi quantum web interface
+just serve        # 🚀 COMPLETE SYSTEM - Build all + run all services + web client  
+just serve-dev    # 🚀 COMPLETE SYSTEM (skip build for faster iteration)
+```
+
+**Individual Interface Options:**
+```bash
+just web-dev      # Revolutionary sci-fi quantum web interface (services separate)
 just play         # Educational trading card game interface  
 just integration  # Complete system validation
 ```
+
+**🎯 RECOMMENDED**: Use `just serve` for the complete Manastr gaming experience!
 
 ### 🎯 **What the Integration Tests Prove**
 
@@ -109,6 +117,7 @@ manastr/
 │   ├── game-engine-bot/    # ✅ Pure validator with anti-cheat
 │   ├── shared-game-logic/  # ✅ WASM-compatible deterministic logic  
 │   ├── manastr-web/        # 🚀 Revolutionary quantum web client
+│   ├── service-orchestrator/# 🎯 Rust service orchestration system
 │   ├── cashu-ts/           # 📦 Cashu-TS library submodule
 │   ├── ndk/                # 📦 NDK Nostr library submodule
 │   ├── nostr-relay/        # ✅ Decentralized event coordination

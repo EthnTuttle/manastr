@@ -1,0 +1,28 @@
+[package]
+name = "service-orchestrator"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "manastr-serve"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json"] }
+axum = { version = "0.7", features = ["tower-log"] }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["fs", "cors", "trace"] }
+hyper = { version = "1.0", features = ["full"] }
+futures = "0.3"
+signal-hook = "0.3"
+signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }
+
+[dev-dependencies]
+tempfile = "3.0"
