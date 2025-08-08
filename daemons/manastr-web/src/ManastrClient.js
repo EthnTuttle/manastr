@@ -15,16 +15,42 @@ export default class ManastrClient {
             boberto: null
         };
         
+        // Match state tracking
+        this.currentMatch = {
+            id: null,
+            challengeEvent: null,
+            acceptanceEvent: null,
+            challenger: null,
+            acceptor: null,
+            wagerAmount: 2,
+            leagueId: 1
+        };
+        
         // Callbacks for UI updates
         this.onStatusUpdate = null;
         this.onLog = null;
         this.onPlayerUpdate = null;
+        this.onMatchUpdate = null;
+        this.onGameEvent = null;
         
         this.status = {
             nostr: 'Disconnected',
             balance: '0 mana',
             activeGames: '0',
             gameEngine: 'Disconnected'
+        };
+        
+        // Runtime stats for UI counters
+        this.stats = {
+            nostrEvents: 0,
+            matches: 0,
+            validations: 0,
+        };
+
+        // Mint runtime stats
+        this.mintStats = {
+            totalTokensMinted: 0,
+            lastQuoteState: 'UNPAID',
         };
     }
 
@@ -159,6 +185,7 @@ export default class ManastrClient {
             
             subscription.on('event', (event) => {
                 this.handleGameEvent(event);
+                if (this.onGameEvent) this.onGameEvent(event);
             });
             
             this.log('📡 Live game event feed activated');
@@ -173,7 +200,7 @@ export default class ManastrClient {
             31000: '🎯 Match Challenge',
             31001: '🎲 Match Accepted',
             31002: '🔮 Token Reveal',
-            31003: '⚔️ Move Committed',
+            31003: '⚔️ Combat Move',
             31004: '🎭 Move Revealed',
             31005: '🏆 Match Result',
             31006: '💰 Loot Distributed'
@@ -183,7 +210,7 @@ export default class ManastrClient {
         const pubkey = event.pubkey.substring(0, 8);
         const timestamp = new Date(event.created_at * 1000).toLocaleTimeString();
         
-        this.log(`${eventType} from ${pubkey}... at ${timestamp}`);
+        this.log(`📡 LIVE: ${eventType} from ${pubkey}... at ${timestamp}`);
         
         // Show event details if available
         try {
@@ -191,12 +218,47 @@ export default class ManastrClient {
             if (content.wager_amount) {
                 this.log(`   💰 Wager: ${content.wager_amount} mana`);
             }
-            if (content.match_id) {
-                this.log(`   🆔 Match: ${content.match_id.substring(0, 8)}...`);
+            if (content.match_event_id || content.match_id) {
+                const matchId = content.match_event_id || content.match_id;
+                this.log(`   🆔 Match: ${matchId.substring(0, 8)}...`);
+            }
+            if (content.round_number) {
+                this.log(`   🗡️ Round: ${content.round_number}`);
+            }
+            if (content.calculated_winner) {
+                this.log(`   🏆 Winner: ${content.calculated_winner.substring(0, 8)}...`);
+            }
+            if (content.loot_cashu_token && event.kind === 31006) {
+                this.log(`   💎 Loot distributed by Game Engine`);
             }
         } catch (e) {
             // Content might not be JSON, that's OK
         }
+        
+        // Update counters and service statistics for real-time monitoring
+        this.stats.nostrEvents += 1;
+        if (event.kind === 31000) {
+            this.stats.matches += 1;
+        }
+        if (event.kind === 31005 || event.kind === 31006) {
+            this.stats.validations += 1;
+        }
+        this.updateServiceStats();
+    }
+
+    updateServiceStats() {
+        // Update Nostr relay stats and counters
+        if (this.onStatusUpdate) {
+            this.onStatusUpdate({
+                ...this.status,
+                nostr: this.nostr ? 'Connected' : 'Disconnected',
+                nostrEvents: this.stats.nostrEvents,
+                matches: this.stats.matches,
+                validations: this.stats.validations,
+            });
+        }
+        const currentTime = new Date().toLocaleTimeString();
+        this.log(`📊 Service stats updated at ${currentTime}`);
     }
 
     async postNote() {
@@ -244,7 +306,7 @@ export default class ManastrClient {
             this.log(`🔗 Mint quantum version: ${mintInfo.version || 'Unknown'}`);
             
             // Update mint health status
-            this.updateMintHealth('Healthy');
+            this.updateMintHealth('Healthy', mintInfo);
             
             // Create wallet instance
             this.wallet = new this.CashuWallet(this.mint);
@@ -259,14 +321,16 @@ export default class ManastrClient {
         }
     }
 
-    updateMintHealth(health) {
+    updateMintHealth(health, info) {
         if (this.onStatusUpdate) {
             this.onStatusUpdate({
                 ...this.status,
                 cashuMint: { 
                     status: health === 'Healthy' ? 'Connected' : 'Disconnected',
                     health: health,
-                    totalTokens: 0 
+                    totalTokens: this.mintStats.totalTokensMinted,
+                    version: info?.version,
+                    name: info?.name,
                 }
             });
         }
@@ -504,17 +568,56 @@ export default class ManastrClient {
             this.log(`💰 Minting 100 mana tokens for ${name}...`);
             
             try {
-                // Request quote for minting tokens with specific unit (matching integration test)
+                // Request quote for minting tokens (try without currency unit first)
                 const mintAmount = 100;
-                const quote = await gamingWallet.createMintQuote(mintAmount, 'mana');
-                this.log(`📋 Quote created for ${name}: ${quote.quote} (${mintAmount} mana)`);
+                this.log(`📋 Requesting mint quote for ${mintAmount} tokens...`);
                 
-                // Mint tokens using the quote
-                const { proofs } = await gamingWallet.mintTokens(mintAmount, quote.quote);
-                this.log(`✅ Minted ${proofs.length} proofs for ${name}`);
+                // Real CDK mint integration - fix API format issue
+                let quote;
+                try {
+                    // Test different API formats to match what mint expects
+                    this.log(`📋 Requesting mint quote for ${mintAmount} mana tokens...`);
+                    
+                    // Try different parameter formats for Cashu-TS library
+                    try {
+                        // Format 1: String parameter  
+                        quote = await gamingWallet.createMintQuote(mintAmount, 'mana');
+                        this.log(`📋 String format worked: ${quote.quote}`);
+                    } catch (stringError) {
+                        this.log(`⚠️ String format failed: ${stringError.message}`);
+                        try {
+                            // Format 2: Object parameter
+                            quote = await gamingWallet.createMintQuote(mintAmount, { unit: 'mana' });
+                            this.log(`📋 Object format worked: ${quote.quote}`);
+                        } catch (objectError) {
+                            this.log(`⚠️ Object format failed: ${objectError.message}`);
+                            // Format 3: No unit parameter (defaults to sat)
+                            quote = await gamingWallet.createMintQuote(mintAmount);
+                            this.log(`📋 Default format worked (sat): ${quote.quote}`);
+                        }
+                    }
+                    
+                } catch (quoteError) {
+                    this.log(`❌ All quote formats failed: ${quoteError.message}`);
+                    this.log(`🔍 Final error details: ${JSON.stringify(quoteError, null, 2)}`);
+                    throw quoteError;
+                }
+                
+                // Wait until mint marks quote as PAID (fake wallet auto-pays in integration)
+                await this.waitForMintQuotePaid(gamingWallet, quote.quote);
+
+                // Use correct Cashu-TS API: mintProofs method with 100x1 outputs
+                const oneUnitOutputs = { keepAmounts: Array.from({ length: mintAmount }, () => 1) };
+                this.log(`🔨 Minting ${mintAmount} proofs of 1 mana each with quote ${quote.quote}...`);
+                const proofs = await gamingWallet.mintProofs(mintAmount, quote.quote, { outputAmounts: oneUnitOutputs });
+                this.log(`✅ Mint result: ${JSON.stringify(proofs, null, 2)}`);
+                this.log(`✅ Minted ${proofs.length} real CDK proofs for ${name}`);
+                
                 
                 // Calculate balance from proofs
-                const balance = proofs.reduce((sum, proof) => sum + proof.amount, 0);
+                const balance = proofs.reduce((sum, proof) => sum + (proof.amount || 0), 0);
+                this.mintStats.totalTokensMinted += proofs.length;
+                this.updateMintHealth('Healthy');
                 
                 const player = {
                     name,
@@ -589,6 +692,407 @@ export default class ManastrClient {
         }
     }
 
+    // ============= 7-PHASE MATCH FLOW IMPLEMENTATION =============
+
+    async createMatchChallenge() {
+        this.log('🎯 Phase 1: Creating match challenge...');
+        
+        if (!this.players.alexi || !this.players.boberto) {
+            throw new Error('Players must be created first');
+        }
+        
+        try {
+            const challenger = this.players.alexi;
+            const wagerAmount = this.currentMatch.wagerAmount;
+            
+            this.log(`🏛️ ${challenger.name} creating challenge with ${wagerAmount} mana wager`);
+            
+            // Create commitment for tokens (simplified for web demo)
+            const tokenSecrets = challenger.tokens.slice(0, wagerAmount).map(token => token.secret);
+            const tokenNonce = this.generateNonce();
+            const tokenCommitment = await this.createCommitment(tokenSecrets.join(''), tokenNonce);
+            
+            // Create match challenge event (Kind 31000)
+            const challengeData = {
+                challenger_npub: challenger.npub,
+                wager_amount: wagerAmount,
+                league_id: this.currentMatch.leagueId,
+                cashu_token_commitment: tokenCommitment,
+                expires_at: Math.floor(Date.now() / 1000) + 3600,
+                created_at: Math.floor(Date.now() / 1000),
+                match_event_id: '' // Will be set after event creation
+            };
+            
+            const event = new this.NDKEvent(challenger.nostrClient, {
+                kind: 31000,
+                content: JSON.stringify(challengeData),
+                created_at: Math.floor(Date.now() / 1000),
+                tags: [
+                    ['d', `match-${Date.now()}`] // Replaceable event identifier
+                ]
+            });
+            
+            await event.sign(challenger.signer);
+            await event.publish();
+            
+            // Update match state
+            this.currentMatch.id = event.id;
+            this.currentMatch.challengeEvent = event;
+            this.currentMatch.challenger = challenger;
+            challengeData.match_event_id = event.id;
+            
+            this.log(`✅ Challenge created with event ID: ${event.id.substring(0, 16)}...`);
+            this.log(`💰 Wager: ${wagerAmount} mana from ${challenger.name}`);
+            
+            this.emitMatchUpdate('challenged');
+            
+        } catch (error) {
+            this.log(`❌ Challenge creation failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async acceptMatchChallenge() {
+        this.log('🎲 Phase 2: Accepting challenge...');
+        
+        if (!this.currentMatch.challengeEvent) {
+            throw new Error('No challenge to accept - create challenge first');
+        }
+        
+        try {
+            const acceptor = this.players.boberto;
+            const challengeId = this.currentMatch.id;
+            
+            this.log(`🏛️ ${acceptor.name} accepting challenge ${challengeId.substring(0, 16)}...`);
+            
+            // Create commitment for acceptor's tokens
+            const tokenSecrets = acceptor.tokens.slice(0, this.currentMatch.wagerAmount).map(token => token.secret);
+            const tokenNonce = this.generateNonce();
+            const tokenCommitment = await this.createCommitment(tokenSecrets.join(''), tokenNonce);
+            
+            // Create match acceptance event (Kind 31001)
+            const acceptanceData = {
+                acceptor_npub: acceptor.npub,
+                match_event_id: challengeId,
+                cashu_token_commitment: tokenCommitment,
+                accepted_at: Math.floor(Date.now() / 1000)
+            };
+            
+            const event = new this.NDKEvent(acceptor.nostrClient, {
+                kind: 31001,
+                content: JSON.stringify(acceptanceData),
+                created_at: Math.floor(Date.now() / 1000)
+            });
+            
+            await event.sign(acceptor.signer);
+            await event.publish();
+            
+            // Update match state
+            this.currentMatch.acceptanceEvent = event;
+            this.currentMatch.acceptor = acceptor;
+            
+            this.log(`✅ Challenge accepted by ${acceptor.name}`);
+            this.log(`🎮 Match is now active between ${this.currentMatch.challenger.name} vs ${acceptor.name}`);
+            
+            this.emitMatchUpdate('accepted');
+            
+        } catch (error) {
+            this.log(`❌ Challenge acceptance failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async revealTokens() {
+        this.log('🔮 Phase 3: Revealing tokens for army verification...');
+        
+        if (!this.currentMatch.acceptanceEvent) {
+            throw new Error('Match must be accepted before revealing tokens');
+        }
+        
+        try {
+            const matchId = this.currentMatch.id;
+            
+            // Both players reveal their tokens
+            await this.publishTokenReveal(this.currentMatch.challenger, matchId);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay
+            await this.publishTokenReveal(this.currentMatch.acceptor, matchId);
+            
+            this.log('✅ Token revelation complete - armies can now be generated from C values');
+            
+            this.emitMatchUpdate('tokens_revealed');
+            
+        } catch (error) {
+            this.log(`❌ Token revelation failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async publishTokenReveal(player, matchId) {
+        this.log(`🔮 ${player.name} revealing Cashu tokens for army verification`);
+        
+        // Reveal token secrets for army generation (simplified for web demo)
+        const tokenSecrets = player.tokens.slice(0, this.currentMatch.wagerAmount).map(token => token.secret);
+        
+        const revealData = {
+            player_npub: player.npub,
+            match_event_id: matchId,
+            cashu_tokens: tokenSecrets,
+            token_secrets_nonce: this.generateNonce(),
+            revealed_at: Math.floor(Date.now() / 1000)
+        };
+        
+        const event = new this.NDKEvent(player.nostrClient, {
+            kind: 31002,
+            content: JSON.stringify(revealData),
+            created_at: Math.floor(Date.now() / 1000)
+        });
+        
+        await event.sign(player.signer);
+        await event.publish();
+        
+        this.log(`📡 ${player.name} published token reveal event`);
+    }
+
+    async executeCombat() {
+        this.log('⚔️ Phase 4: Executing combat rounds...');
+        
+        try {
+            const matchId = this.currentMatch.id;
+            const rounds = 3; // 3 combat rounds like integration test
+            
+            this.log(`⚔️ Beginning ${rounds} rounds of turn-based combat`);
+            
+            // Execute turn-based combat rounds
+            for (let round = 1; round <= rounds; round++) {
+                this.log(`🗡️ Round ${round}/${rounds}`);
+                
+                // Challenger moves first
+                await this.publishCombatMove(this.currentMatch.challenger, matchId, round, null);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Acceptor responds
+                await this.publishCombatMove(this.currentMatch.acceptor, matchId, round, null);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                this.log(`✅ Round ${round} completed`);
+            }
+            
+            this.log('🏆 Combat phase completed - all rounds executed');
+            
+            this.emitMatchUpdate('combat_complete');
+            
+        } catch (error) {
+            this.log(`❌ Combat execution failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async publishCombatMove(player, matchId, round, previousEventHash) {
+        const moveData = {
+            player_npub: player.npub,
+            match_event_id: matchId,
+            previous_event_hash: previousEventHash,
+            round_number: round,
+            unit_positions: [1, 2, 3, 4], // Army unit positions
+            unit_abilities: ["boost", "shield"], // Unit abilities used
+            move_timestamp: Math.floor(Date.now() / 1000)
+        };
+        
+        const event = new this.NDKEvent(player.nostrClient, {
+            kind: 31003,
+            content: JSON.stringify(moveData),
+            created_at: Math.floor(Date.now() / 1000)
+        });
+        
+        await event.sign(player.signer);
+        await event.publish();
+        
+        this.log(`⚔️ ${player.name} executed combat move for round ${round}`);
+        return event.id;
+    }
+
+    async submitResults() {
+        this.log('🏆 Phase 5: Submitting match results...');
+        
+        try {
+            const matchId = this.currentMatch.id;
+            
+            // Simulate match outcome - challenger wins for demo
+            const winner = this.currentMatch.challenger;
+            
+            this.log(`🎯 Calculating match outcome...`);
+            this.log(`🏆 Winner: ${winner.name}`);
+            
+            // Both players submit their calculated results
+            await this.publishMatchResult(this.currentMatch.challenger, matchId, winner.npub);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await this.publishMatchResult(this.currentMatch.acceptor, matchId, winner.npub);
+            
+            this.log('✅ Match results submitted by both players');
+            
+            this.currentMatch.winner = winner.npub;
+            this.emitMatchUpdate('results_submitted');
+            
+        } catch (error) {
+            this.log(`❌ Result submission failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async publishMatchResult(player, matchId, winnerNpub) {
+        const resultData = {
+            player_npub: player.npub,
+            match_event_id: matchId,
+            final_army_state: { units: "final_state_demo" },
+            all_round_results: [
+                { round: 1, damage: 15 },
+                { round: 2, damage: 12 },
+                { round: 3, damage: 8 }
+            ],
+            calculated_winner: winnerNpub,
+            match_completed_at: Math.floor(Date.now() / 1000)
+        };
+        
+        const event = new this.NDKEvent(player.nostrClient, {
+            kind: 31005,
+            content: JSON.stringify(resultData),
+            created_at: Math.floor(Date.now() / 1000)
+        });
+        
+        await event.sign(player.signer);
+        await event.publish();
+        
+        this.log(`📊 ${player.name} submitted match result`);
+    }
+
+    async distributeLoot() {
+        this.log('💰 Phase 6: Game Engine distributing loot...');
+        
+        try {
+            const matchId = this.currentMatch.id;
+            const winner = this.currentMatch.challenger; // Demo: challenger wins
+            const totalWager = this.currentMatch.wagerAmount * 2; // 2 players
+            const lootAmount = Math.floor(totalWager * 0.95); // 95% to winner
+            const systemFee = totalWager - lootAmount; // 5% system fee
+            
+            this.log(`💰 Economic model: ${totalWager} total mana → ${lootAmount} loot tokens (95%), ${systemFee} system fee`);
+            this.log(`🏆 Winner: ${winner.name} receives ${lootAmount} loot tokens`);
+            
+            // In real implementation, Game Engine would mint loot tokens
+            // For demo, we simulate the loot distribution event
+            const lootData = {
+                game_engine_npub: "game_engine_demo_npub",
+                match_event_id: matchId,
+                winner_npub: winner.npub,
+                loot_cashu_token: "demo_loot_token_c_value",
+                match_fee: systemFee,
+                loot_issued_at: Math.floor(Date.now() / 1000),
+                validation_summary: {
+                    status: "success",
+                    integrity_score: 1.0,
+                    validation_notes: "All events verified successfully"
+                }
+            };
+            
+            // Game Engine publishes loot distribution (Kind 31006)
+            // For demo, we use the main client's signer
+            if (this.nostr && this.signer) {
+                const event = new this.NDKEvent(this.nostr, {
+                    kind: 31006,
+                    content: JSON.stringify(lootData),
+                    created_at: Math.floor(Date.now() / 1000)
+                });
+                
+                await event.sign(this.signer);
+                await event.publish();
+                
+                this.log(`📡 Game Engine published KIND 31006 Loot Distribution event`);
+            }
+            
+            this.log('✅ Loot distribution complete - zero-coordination gaming cycle finished!');
+            this.log('🎮 Revolutionary player-driven match completed successfully');
+            
+            this.emitMatchUpdate('loot_distributed');
+            
+        } catch (error) {
+            this.log(`❌ Loot distribution failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    // Helper methods for match flow
+    generateNonce() {
+        return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
+
+    async createCommitment(data, nonce) {
+        // Simple commitment scheme for demo (in real implementation, use SHA256)
+        const encoder = new TextEncoder();
+        const combinedData = encoder.encode(data + nonce);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', combinedData);
+        const hashArray = new Uint8Array(hashBuffer);
+        return Array.from(hashArray, b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    emitMatchUpdate(phase) {
+        if (!this.onMatchUpdate) return;
+        const info = {
+            id: this.currentMatch.id,
+            phase,
+            wagerAmount: this.currentMatch.wagerAmount,
+            leagueId: this.currentMatch.leagueId,
+            challenger: this.currentMatch.challenger ? this.currentMatch.challenger.npub : null,
+            acceptor: this.currentMatch.acceptor ? this.currentMatch.acceptor.npub : null,
+            winner: this.currentMatch.winner || null,
+        };
+        this.onMatchUpdate(info);
+    }
+
+    async runFullFlow() {
+        // Convenience method for UI: run phases sequentially
+        await this.createPlayers();
+        await this.createMatchChallenge();
+        await this.acceptMatchChallenge();
+        await this.revealTokens();
+        await this.executeCombat();
+        await this.submitResults();
+        await this.distributeLoot();
+    }
+
+    async waitForMintQuotePaid(wallet, quoteId) {
+        try {
+            this.log(`⏳ Waiting for mint quote ${quoteId} to be paid...`);
+            const maxAttempts = 60; // ~6 seconds
+            const delayMs = 100;
+            for (let i = 0; i < maxAttempts; i++) {
+                const state = await wallet.checkMintQuote(quoteId);
+                if (state && (state.state === 'PAID' || state.state === 'ISSUED')) {
+                    this.log(`✅ Quote is ${state.state}`);
+                    return;
+                }
+                await new Promise(r => setTimeout(r, delayMs));
+            }
+            throw new Error('Timeout waiting for mint quote to be paid');
+        } catch (e) {
+            this.log(`⚠️ Quote check failed or unpaid: ${e.message}`);
+            throw e;
+        }
+    }
+
+    resetMatch() {
+        this.currentMatch = {
+            id: null,
+            challengeEvent: null,
+            acceptanceEvent: null,
+            challenger: null,
+            acceptor: null,
+            wagerAmount: 2,
+            leagueId: 1,
+            winner: null,
+        };
+        this.log('🧹 Match state reset');
+        this.emitMatchUpdate('reset');
+    }
     disconnect() {
         if (this.nostr) {
             this.nostr.disconnect();
