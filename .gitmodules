@@ -11,3 +11,9 @@
 [submodule "daemons/ndk"]
 	path = daemons/ndk
 	url = https://github.com/nostr-dev-kit/ndk.git
+[submodule "daemons/notedeck"]
+	path = daemons/notedeck
+	url = https://github.com/damus-io/notedeck.git
+[submodule "cashume"]
+	path = cashume
+	url = git@github.com:EthnTuttle/cashu.me.git

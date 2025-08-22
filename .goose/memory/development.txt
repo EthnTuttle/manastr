@@ -1,0 +1,9 @@
+# cashu nostr state-machine purple-mana exchange-protocol
+Purple Mana Cashu-Nostr Integration: Implemented a complete state machine for tracking Cashu token exchanges via Nostr events. Key components include:
+- cashu_nostr_events.dart: Models for Nostr events containing Cashu proofs
+- cashu_exchange_service.dart: Service managing exchange state machines with event publishing/subscription
+- exchange_state_visualizer.dart: UI component for visualizing state transitions
+- CASHU_EXCHANGE_PROTOCOL.md: Complete protocol documentation
+- Custom Nostr event kind 8333 for Cashu exchanges
+- State machine with 9 states and deterministic transitions
+

@@ -14,6 +14,8 @@ members = [
 exclude = [
     "daemons/nostr-relay/nostr-rs-relay",  # External dependency
     "daemons/cdk",  # CDK submodule - managed separately
+    "daemons/notedeck_manastr",  # Standalone notedeck app - build separately
+    "daemons/notedeck",  # Notedeck submodule - managed separately
 ]
 
 [workspace.package]

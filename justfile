@@ -16,13 +16,15 @@ default:
     @echo "   just serve-cdk-mint        # 💰 Start CDK mint with logging"
     @echo "   just serve-nostr-relay     # 📡 Start Nostr relay with logging"
     @echo "   just serve-game-engine     # 🎮 Start game engine with logging"
-    @echo "   just serve-web-dev         # 🌐 Start web dev server with logging"
+    @echo "   just manastr-client        # 🃏 Run Manastr via integrated Notedeck"
+    @echo "   just dev-client            # 🚀 Quick dev: build + run integrated client"
     @echo ""
     @echo "🔥 PROCESS MANAGEMENT:"
     @echo "   just kill-all              # Kill all running services"
     @echo ""
     @echo "🚀 ESSENTIAL COMMANDS:"
     @echo "   just build                 # Build all components"
+    @echo "   just build-client          # Build just the Manastr client"
     @echo "   just clean                 # Clean build artifacts"
     @echo ""
 
@@ -46,11 +48,17 @@ build:
     cd daemons/nostr-relay/nostr-rs-relay && cargo build --release
     @echo "✅ Nostr relay built successfully"
     @echo ""
-    @echo "🌐 Building web client..."
-    cd daemons/manastr-web && npm install && npm run build
-    @echo "✅ Web client built successfully"
+    @echo "🃏 Building integrated Notedeck with Manastr..."
+    cd daemons/notedeck && cargo build --release --bin notedeck
+    @echo "✅ Integrated Notedeck with Manastr built successfully"
     @echo ""
     @echo "🚀 All components built successfully!"
+
+# Build just the integrated Notedeck with Manastr
+build-client:
+    @echo "🃏 Building integrated Notedeck with Manastr..."
+    cd daemons/notedeck && cargo build --release --bin notedeck
+    @echo "✅ Integrated Notedeck with Manastr built successfully!"
 
 # Clean all build artifacts
 clean:
@@ -104,13 +112,21 @@ serve-game-engine:
     echo "🎮 Starting game engine bot..."
     ./target/release/game-engine-bot 2>&1 | tee "game-engine-$(date +%Y%m%d-%H%M%S).log"
 
-# 🌐 SERVE WEB DEV - Start web development server with timestamped logging
-serve-web-dev:
+# 🃏 MANASTR CLIENT - Run integrated Notedeck with Manastr app
+manastr-client:
     #!/usr/bin/env bash
     set -euo pipefail
-    cd daemons/manastr-web
-    echo "🌐 Starting web development server..."
-    npm run dev 2>&1 | tee "web-dev-$(date +%Y%m%d-%H%M%S).log"
+    cd daemons/notedeck
+    echo "🃏 Starting integrated Notedeck with Manastr..."
+    cargo run --release --bin notedeck
+
+# 🚀 DEV CLIENT - Quick development: build + run integrated client
+dev-client:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd daemons/notedeck
+    echo "🚀 Quick dev: building and running integrated Notedeck with Manastr..."
+    cargo run --bin notedeck -- --debug
 
 # 🔥 KILL ALL - Kill all running Manastr processes
 kill-all:
@@ -127,12 +143,8 @@ kill-all:
     # Kill Game Engine
     pkill -f "game-engine-bot" || echo "  🎮 Game engine not running"
     
-    # Kill Web dev server (Vite)
-    pkill -f "vite" || echo "  🌐 Vite dev server not running"
-    pkill -f "npm.*dev" || echo "  🌐 NPM dev server not running"
-    
-    # Kill any Node processes from this project
-    pkill -f "manastr-web" || echo "  🌐 Manastr web processes not running"
+    # Kill Notedeck/Manastr client
+    pkill -f "notedeck" || echo "  🃏 Notedeck/Manastr client not running"
     
     echo "✅ All Manastr processes terminated"
 
